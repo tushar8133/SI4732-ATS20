@@ -1,0 +1,54 @@
+01si4735.getDeviceI2CAddress(12) // RESET_PIN | Looks for the I2C bus address and set it.  Returns 0 if error
+02si4735.setup(12, 1) // RESET_PIN | 0-FM 1-AM
+03si4735.setAvcAmMaxGain(48) //between 12 and 90. Defaul value 48dB.
+04delay(500);
+05si4735.setTuneFrequencyAntennaCapacitor(1) // Related to VARACTOR. Official recommendation is 0, but PU2CLR has set to 1 for SW and 0 for MW/LW
+06si4735.setAM(100, 30000, 10000, 5)
+07si4735.setAutomaticGainControl(0, 18) // This param selects whether the AGC is enabled or disabled (0 = AGC enabled; 1 = AGC disabled) | AGC Index (0 = Minimum attenuation (max gain) 1 – 36 = Intermediate attenuation) if >greater than 36 - Maximum attenuation (min gain) )
+08si4735.setAmSoftMuteMaxAttenuation(32) // This function can be useful to disable Soft Mute. The value 0 disable soft mute. Specified in units of dB. Default maximum attenuation is 8 dB. Goes til 32. It works for AM and SSB.
+09si4735.setBandwidth(3, 1) // BW 0=6kHz,  1=4kHz,  2=3kHz,  3=2kHz,  4=1kHz,  5=1.8kHz,  6=2.5kHz . The default bandwidth is 2 kHz. It works only in AM / SSB (LW/MW/SW) | Enables the AM Power Line Noise Rejection Filter.
+10si4735.setSeekAmLimits(100, 30000)
+11si4735.setSeekAmSpacing(10) // Selects frequency spacingfor AM seek. Default is 10 kHz spacing.
+12delay(100);
+13si4735.setVolume(20) // 0 - 63
+si4735.frequencyDown()
+si4735.frequencyUp()
+si4735.getCurrentReceivedSignalQuality() // Received Signal Quality (RSQ) of the current channel. This method sould be called berore call getCurrentRSSI getCurrentSNR
+si4735.getCurrentRSSI() // return signal strength (0–127 dBμV)
+si4735.getCurrentSNR() // return SNR metric (0–127 dB)
+si4735.getCurrentVolume()
+si4735.getFrequency()
+si4735.getVolume()
+si4735.seekStationProgress(showFrequencySeek, checkStopSeeking, seekDirection)
+si4735.setFrequency(100) // For example, FM => 10390 = 103.9 MHz; AM => 810 = 810 kHz.
+si4735.setFrequencyStep(5) // step - If you are using FM, 10 means 100kHz. If you are using AM 10 means 10kHz For AM, 1 (1kHz) to 1000 (1MHz) are valid values. For FM 5 (50kHz), 10 (100kHz) and 100 (1MHz) are valid values.
+si4735.volumeDown()
+si4735.volumeUp()
+~FM~si4735.getCurrentPilot() // returns true if fm is stereo
+~FM~si4735.setFM(6400, 10800, 9830, 10) // min, max, current, step
+~FM~si4735.setFmBandwidth(0) // 0-Automatically select proper channel filter (Default), 1-Force wide (110 kHz) channel filter, 2-Force narrow (84 kHz) channel filter, 3-Force narrower (60 kHz) channel filter, 4-Force narrowest (40 kHz) channel filter
+~FM~si4735.setSeekFmLimits(6400 , 10800)
+~FM~si4735.setSeekFmSpacing(1) // Selects frequency spacingfor FM seek. Default is 100 kHz (value 10) spacing. There are only 3 valid values: 5, 10, and 20. Although the guide does not mention it, the value 1 (10 kHz) seems to work better
+~RDS~si4735.getEndGroupB()
+~RDS~si4735.getGroupLost()
+~RDS~si4735.getRdsReceived()
+~RDS~si4735.getRdsStatus()
+~RDS~si4735.getRdsSync()
+~RDS~si4735.getRdsSyncFound()
+~RDS~si4735.getRdsSyncLost()
+~RDS~si4735.getRdsText0A()
+~RDS~si4735.resetEndGroupB() // not used
+~RDS~si4735.setFifoCount(1)
+~RDS~si4735.setRdsConfig(1, 2, 2, 2, 2)
+~SSB~si4735.downloadCompressedPatch(ssb_patch_content, size_content, cmd_0x15, cmd_0x15_size)
+~SSB~si4735.patchPowerUp() // related to patch
+~SSB~si4735.queryLibraryId() // Is it really necessary here? I will check it. Related to patch
+~SSB~si4735.setI2CFastModeCustom(500000) // Sets the I2C bus to a given value. ATTENTION: use this function with cation. For example: The values 500000 sets the bus to 500kHz.
+~SSB~si4735.setI2CStandardMode() // Sets I2C bus to 100kHz.
+~SSB~si4735.setSBBSidebandCutoffFilter(0) // 0, 1
+~SSB~si4735.setSSB(100, 30000, 100, 1, 1) // min | max | current | step | mode 0-FM, 1-LSB, 2-USB, 3-AM, 4-LW
+~SSB~si4735.setSSBAudioBandwidth("3.0") // "0.5" ,"1.0" ,"1.2" ,"2.2" ,"3.0" ,"4.0"
+~SSB~si4735.setSSBAutomaticVolumeControl(1)
+~SSB~si4735.setSSBBfo(currentBFO) // Sets the SSB Beat Frequency Offset (BFO). The valid range is -16383 to +16383 Hz
+~SSB~si4735.setSSBConfig("3.0", 1, 0, 1, 0, 1) // // BW "0.5" ,"1.0" ,"1.2" ,"2.2" ,"3.0" ,"4.0" | ? | ? | ? | ? | ? |
+~SSB~si4735.setSsbSoftMuteMaxAttenuation(0) // Disable Soft Mute for SSB
