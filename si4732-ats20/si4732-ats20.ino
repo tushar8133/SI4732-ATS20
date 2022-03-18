@@ -46,8 +46,12 @@ Mode mode[] = {
 };
 
 short currentMode = 0;
+volatile int encoderCount = 0;
 
 void setup() {
+
+  // Serial.begin(9600);
+
   for (int i = 0; i < btnTotal; i++) {
     pinMode(btns[i].pin, INPUT_PULLUP);
   }
@@ -104,6 +108,12 @@ void loop() {
       delay(100);
     }
   }
+  if (encoderCount != 0) {
+    modeHandler(encoderCount);
+    btns[0].tstamp = millis();
+    encoderCount = 0;
+    delay(50);
+  }
   if (currentButton > -1 && !(btns[currentButton].complex && btns[currentButton].tstamp + 5000 > currentTime)) {
     resetAll();
   }
@@ -131,6 +141,7 @@ void resetAll() {
   }
   currentButton = -1;
   currentMode = 0;
+  oled.clear();
 }
 
 void changeMode(short dir) {
@@ -147,21 +158,19 @@ void changeMode(short dir) {
 }
 
 void rotaryEncoder()
-{
-  btns[0].tstamp = millis();
+{ // rotary encoder events
   uint8_t encoderStatus = encoder.process();
   if (encoderStatus)
   {
     if (encoderStatus == DIR_CW)
     {
-      modeHandler(1);
+      encoderCount = 1;
     }
     else
     {
-      modeHandler(-1);
+      encoderCount = -1;
     }
   }
-  delay(100);
 }
 
 void modeHandler(short dir) {
@@ -181,7 +190,7 @@ void spinFrequency(short dir) {
     si4735.frequencyDown();
   }
   oled.print("FREQUENCY");
-  oled.setCursor(0, 1);
+  // oled.setCursor(0, 1);
   oled.print(si4735.getFrequency());
 }
 
@@ -195,7 +204,6 @@ void spinBand(short dir) {
 }
 
 void spinGain(short dir) {
-  oled.setCursor(0, 0);
   if (dir == 1) {
     oled.print("spinGain >>");
   } else {
@@ -258,6 +266,5 @@ void step(short dir) {
 
 void showFrequencySeek(uint16_t freq)
 {
-  oled.setCursor(0, 1);
   oled.print(si4735.getFrequency());
 }
