@@ -1,7 +1,7 @@
 #include <SI4735.h>
 #include <EEPROM.h>
 #include <Tiny4kOLED.h>
-#include <font8x16atari.h> // Please, install the TinyOLED-Fonts library
+#include <font8x16atari.h>
 #include "Rotary.h"
 
 // Devices class declarations
@@ -50,7 +50,7 @@ volatile int encoderCount = 0;
 
 void setup() {
 
-  // Serial.begin(9600);
+  Serial.begin(9600); // si4732 (comment kept here to quicky search and replace all the comments using this term, for the use of wokwi)
 
   for (int i = 0; i < btnTotal; i++) {
     pinMode(btns[i].pin, INPUT_PULLUP);
@@ -63,27 +63,23 @@ void setup() {
   oled.begin();
   oled.clear();
   oled.on();
-  oled.setFont(FONT6X8);
-  oled.setCursor(0, 0);
-  oled.print("SI4732");
+  display("READY", 0);
   delay(2000);
-  oled.clear();
 
 
   // If you want to reset the eeprom, keep the VOLUME_UP button pressed during statup
   if (digitalRead(8) == LOW)
   {
     EEPROM.write(0, 0);
-    oled.print("EEPROM RESETED");
+    display("RESET", 0);
     delay(2000);
-    oled.clear();
   }
 
 
   si4735.getDeviceI2CAddress(12); // Looks for the I2C bus address and set it.  Returns 0 if error
   si4735.setup(12, 1); //
   si4735.setAvcAmMaxGain(48); // Sets the maximum gain for automatic volume control on AM/SSB mode (between 12 and 90dB)
-  delay(500);
+  delay(500); //si4735
   si4735.setTuneFrequencyAntennaCapacitor(1); // Related to VARACTOR. Official recommendation is 0, but PU2CLR has set to 1 for SW and 0 for MW/LW
   si4735.setAM(100, 30000, 7300, 5);
   si4735.setAutomaticGainControl(0, 0); // This param selects whether the AGC is enabled or disabled (0 = AGC enabled; 1 = AGC disabled) | AGC Index (0 = Minimum attenuation (max gain) 1 – 36 = Intermediate attenuation) if >greater than 36 - Maximum attenuation (min gain) )
@@ -91,7 +87,7 @@ void setup() {
   si4735.setBandwidth(3, 1); // BW 0=6kHz,  1=4kHz,  2=3kHz,  3=2kHz,  4=1kHz,  5=1.8kHz,  6=2.5kHz . The default bandwidth is 2 kHz. It works only in AM / SSB (LW/MW/SW) | Enables the AM Power Line Noise Rejection Filter.
   si4735.setSeekAmLimits(100, 30000);
   si4735.setSeekAmSpacing(10); // Selects frequency spacingfor AM seek. Default is 10 kHz spacing.
-  delay(100);
+  delay(100); //si4735
   si4735.setVolume(20);
 }
 
@@ -102,8 +98,6 @@ void loop() {
     if (digitalRead(btns[i].pin) == LOW) {
       currentButton = i;
       btns[i].tstamp = currentTime;
-      oled.clear();
-      oled.setCursor(0, 0);
       btnHandler(i);
       delay(100);
     }
@@ -153,8 +147,7 @@ void changeMode(short dir) {
   else if (dir > 0 && currentMode > totalModes) {
     currentMode = 0;
   }
-  oled.print("currentMode ");
-  oled.print(currentMode);
+  display(mode[currentMode].type, 0);
 }
 
 void rotaryEncoder()
@@ -189,82 +182,78 @@ void spinFrequency(short dir) {
   } else {
     si4735.frequencyDown();
   }
-  oled.print("FREQUENCY");
-  // oled.setCursor(0, 1);
-  oled.print(si4735.getFrequency());
+  display("frequency", si4735.getFrequency());
 }
 
 void spinBand(short dir) {
-  if (dir == 1) {
-    oled.print("spinBand >>");
-  } else {
-    oled.print("spinBand <<");
-  }
-
+  display("Band", dir);
 }
 
 void spinGain(short dir) {
-  if (dir == 1) {
-    oled.print("spinGain >>");
-  } else {
-    oled.print("spinGain <<");
-  }
+  display("Gain", dir);
 }
 
 void spinBandwidth(short dir) {
-  if (dir == 1) {
-    oled.print("spinBandwidth >>");
-  } else {
-    oled.print("spinBandwidth <<");
-  }
+  display("Bandwidth", dir);
 }
 
 void spinBattery(short dir) {
-  if (dir == 1) {
-    oled.print("spinBattery >>");
-  } else {
-    oled.print("spinBattery <<");
-  }
+  display("Battery", 100);
 }
 
 void volume(short dir) {
   if (dir > 0) {
     si4735.volumeUp();
-    oled.print("Volume >>");
   }
   else if (dir < 0) {
     si4735.volumeDown();
-    oled.print("Volume <<");
   }
-}
-
-void seek(short dir) {
-  if (dir > 0) {
-    si4735.frequencyUp();
-    si4735.seekStationProgress(showFrequencySeek, 1);
-    oled.print("Seek >>");
-  }
-  else if (dir < 0) {
-    si4735.frequencyDown();
-    si4735.seekStationProgress(showFrequencySeek, 0);
-    oled.print("Seek <<");
-  }
+  display("Volume", si4735.getVolume());
 }
 
 void step(short dir) {
   if (dir > 0) {
     si4735.setFrequencyStep(100);
     si4735.setSeekAmSpacing(100);
-    oled.print("Step >>");
   }
   else if (dir < 0) {
     si4735.setFrequencyStep(5);
     si4735.setSeekAmSpacing(5);
-    oled.print("Step <<");
   }
+  display("Step", dir);
+}
+
+void seek(short dir) {
+  if (dir > 0) {
+    si4735.frequencyUp();
+    si4735.seekStationProgress(showFrequencySeek, 1);
+  }
+  else if (dir < 0) {
+    si4735.frequencyDown();
+    si4735.seekStationProgress(showFrequencySeek, 0);
+  }
+  display("Seek", dir);
 }
 
 void showFrequencySeek(uint16_t freq)
 {
-  oled.print(si4735.getFrequency());
+  oled.setFont(FONT8X16ATARI);
+  oled.setCursor(0, 2);
+  oled.print("                       ");
+  oled.setCursor(0, 2);
+  oled.print(freq);
+}
+
+void display(char* str, int val) {
+  oled.setFont(FONT6X8);
+  oled.setCursor(0, 0);
+  oled.print("                       ");
+  oled.setCursor(0, 0);
+  oled.print(str);
+
+  oled.setFont(FONT8X16ATARI);
+  oled.setCursor(0, 2);
+  oled.print("                       ");
+  oled.setCursor(0, 2);
+  oled.print(val);
 }
