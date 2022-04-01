@@ -64,22 +64,10 @@ void setup() {
   oled.clear();
   oled.on();
   display("READY", 0);
-  delay(2000);
-
-
-  // If you want to reset the eeprom, keep the VOLUME_UP button pressed during statup
-  if (digitalRead(8) == LOW)
-  {
-    EEPROM.write(0, 0);
-    display("RESET", 0);
-    delay(2000);
-  }
-
 
   si4735.getDeviceI2CAddress(12); // Looks for the I2C bus address and set it.  Returns 0 if error
   si4735.setup(12, 1); //
   si4735.setAvcAmMaxGain(48); // Sets the maximum gain for automatic volume control on AM/SSB mode (between 12 and 90dB)
-  delay(500); //si4735
   si4735.setTuneFrequencyAntennaCapacitor(1); // Related to VARACTOR. Official recommendation is 0, but PU2CLR has set to 1 for SW and 0 for MW/LW
   si4735.setAM(100, 30000, 7300, 5);
   si4735.setAutomaticGainControl(0, 0); // This param selects whether the AGC is enabled or disabled (0 = AGC enabled; 1 = AGC disabled) | AGC Index (0 = Minimum attenuation (max gain) 1 – 36 = Intermediate attenuation) if >greater than 36 - Maximum attenuation (min gain) )
@@ -87,7 +75,6 @@ void setup() {
   si4735.setBandwidth(3, 1); // BW 0=6kHz,  1=4kHz,  2=3kHz,  3=2kHz,  4=1kHz,  5=1.8kHz,  6=2.5kHz . The default bandwidth is 2 kHz. It works only in AM / SSB (LW/MW/SW) | Enables the AM Power Line Noise Rejection Filter.
   si4735.setSeekAmLimits(100, 30000);
   si4735.setSeekAmSpacing(10); // Selects frequency spacingfor AM seek. Default is 10 kHz spacing.
-  delay(100); //si4735
   si4735.setVolume(20);
 }
 
@@ -99,19 +86,17 @@ void loop() {
       currentButton = i;
       btns[i].tstamp = currentTime;
       btnHandler(i);
-      delay(100);
+      delay(50);
     }
   }
   if (encoderCount != 0) {
     modeHandler(encoderCount);
     btns[0].tstamp = millis();
     encoderCount = 0;
-    delay(50);
   }
-  if (currentButton > -1 && !(btns[currentButton].complex && btns[currentButton].tstamp + 5000 > currentTime)) {
-    resetAll();
-  }
-  delay(10);
+  // if (currentButton > -1 && !(btns[currentButton].complex && btns[currentButton].tstamp + 5000 > currentTime)) {
+  //   resetAll();
+  // }
 }
 
 
