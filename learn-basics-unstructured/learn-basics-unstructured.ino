@@ -91,6 +91,7 @@ void modeHandler(short dir) {
 short currentButton = 1;
 modeHandler(currentButton)
 =====================================
+// RECEVING USER INPUT FROM DEBUGGING WINDOW
 String userinput = "";
 void setup() {
   Serial.begin(9600);
@@ -98,22 +99,27 @@ void setup() {
 void loop() {
   userinput = Serial.readString();
   if (userinput == "1\n") {
-    Serial.println("with cr lf")
+    Serial.println("received with CR LF and compared as it is");
   }
   
   userinput.trim();
   if (userinput == "1") {
-    Serial.println("converted to string")
+    Serial.println("removed CR LF before comparing the string");
   }
   
   int mynumber = userinput.toInt();
   if (mynumber == 1) {
-    Serial.println("converted to number")
+    Serial.println("converted to number before comparing");
+  }
+
+  int mynumber = 1;
+  if (String(mynumber) == "1") {
+    Serial.println("Number converted to String");
   }
   delay(500);
 }
 =====================================
-ARRAY
+// ARRAY
 int _ATTUENATE[] = { 0, 1, 5, 10, 25, 36 };
 int size = (sizeof(_ATTUENATE) / sizeof(_ATTUENATE[0]));
 int val = _ATTUENATE[5];
