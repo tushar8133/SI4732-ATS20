@@ -5,21 +5,34 @@ int CURRENT_SETTING = 0;
 int CURRENT_FREQUENCY = 12725;
 int CURRENT_STEP = 5;
 
-void adjustSimpleCommand() {
+void sendCommand(String name, int param) {
   Serial.println("COMMAND - NOW THIS IS WHAT I CALL MUSIC");
+  // int val = _BANDWIDTH_DEFAULT + dir;
+  // int size = (sizeof(_BANDWIDTH) / sizeof(_BANDWIDTH[0]));
+  // if (val >= 0 && val < size) {
+  //   _BANDWIDTH_DEFAULT = val;
+  // }
+  // si4735.setBandwidth(_BANDWIDTH[_BANDWIDTH_DEFAULT], _LINENOISE[_LINENOISE_DEFAULT]);
+  // display5(_BANDWIDTH[_BANDWIDTH_DEFAULT]);
 }
 
 typedef struct {
   String name;
   int index;
   int items[20];
-  void (*func)();
+  void (*func)(String, int);
 } Settings;
 
 Settings settings[] = {
-  {"VOLUME", 0, {11, 22, 33, 44}, adjustSimpleCommand },
-  {"STEPS", 0, {11, 22, 33, 44}, adjustSimpleCommand },
-  {"BANDWIDTH", 0, {11, 22, 33, 44}, adjustSimpleCommand }
+  { "VOLUME", 3, { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 63 }, sendCommand},
+  { "STEPS", 1, { 1, 5, 9 }, sendCommand},
+  { "AGC", 0, { 1, 0 }, sendCommand},
+  { "AVC", 2, { 12, 48, 90 }, sendCommand},
+  { "ATTENUATE", 0, { 0, 1, 5, 10, 25, 36 }, sendCommand},
+  { "SOFTMUTE", 0, { 0, 1, 5, 8, 15, 20, 25, 32 }, sendCommand},
+  { "BANDWIDTH", 6, { 4, 5, 3, 6, 2, 1, 0 }, sendCommand},
+  { "CAPACITOR", 0, { 0, 1 }, sendCommand},
+  { "LINENOISE", 0, { 0, 1 }, sendCommand}
 };
 
 void setScreen(int dir) {
@@ -54,8 +67,8 @@ void reactToKnob() {
   if (KNOB != 0) {
     switch (SCREEN) {
       case 0: updateFrequency(); break;
-      case 1: chooseSetting(); break;
-      case 2: updateSetting(); break;
+      case 1: spinSetting(); break;
+      case 2: adjustSetting(); break;
       default: break;
     }
   }
@@ -65,17 +78,20 @@ void updateFrequency() {
   CURRENT_FREQUENCY = CURRENT_FREQUENCY + CURRENT_STEP * KNOB;
 }
 
-void chooseSetting() {
+void spinSetting() {
   int val = CURRENT_SETTING + KNOB;
-  if (val >= 0 && val <= 2) {
+  int len = (sizeof(settings) / sizeof(Settings)) - 1;
+  if (val >= 0 && val <= len) {
     CURRENT_SETTING = val;
   }
 }
 
-void updateSetting() {
-  int val = settings[CURRENT_SETTING].index;
-  settings[CURRENT_SETTING].index = val + KNOB;
-  settings[CURRENT_SETTING].func();
+void adjustSetting() {
+  int oldValue = settings[CURRENT_SETTING].index;
+  int newValue = oldValue + KNOB;
+  String name = settings[CURRENT_SETTING].name;
+  settings[CURRENT_SETTING].index = newValue;
+  settings[CURRENT_SETTING].func(name, newValue);
 }
 
 void displayOutput() {
