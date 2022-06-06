@@ -78,6 +78,8 @@ switch (settings) {
 }
 
 =====================================
+//SWITCH CASE
+//works with int or char 'A' not "String" (double quotes)
 void modeHandler(short dir) {
   switch (settings) {
     case FREQUENCY: spinFrequency(dir); break;
@@ -123,4 +125,41 @@ void loop() {
 int _ATTUENATE[] = { 0, 1, 5, 10, 25, 36 };
 int size = (sizeof(_ATTUENATE) / sizeof(_ATTUENATE[0]));
 int val = _ATTUENATE[5];
+=====================================
+// ENUM EXAMPLE 1
+enum State {
+  SLEEP,
+  AWAKE,
+  CRAZY
+};
+void setup() {
+  Serial.begin(9600);
+  State state = CRAZY;
+  Serial.println(state);
+}
+// ENUM EXAMPLE 2
+enum State {
+  SLEEP,
+  AWAKE,
+  CRAZY
+} state;
+
+void setup() {
+  Serial.begin(9600);
+  state = CRAZY;
+  Serial.println(state);
+}
+
+// ENUM EXAMPLE 3
+enum State {
+  SLEEP,
+  AWAKE,
+  CRAZY
+} state = CRAZY;
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println(state);
+}
+
 =====================================
