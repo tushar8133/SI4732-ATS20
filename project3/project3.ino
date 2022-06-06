@@ -5,16 +5,21 @@ int CURRENT_SETTING = 0;
 int CURRENT_FREQUENCY = 12725;
 int CURRENT_STEP = 5;
 
+void adjustSimpleCommand() {
+  Serial.println("COMMAND - NOW THIS IS WHAT I CALL MUSIC");
+}
+
 typedef struct {
   String name;
   int index;
   int items[20];
+  void (*func)();
 } Settings;
 
 Settings settings[] = {
-  {"VOLUME", 0, {11, 22, 33, 44} },
-  {"STEPS", 0, {11, 22, 33, 44} },
-  {"BANDWIDTH", 0, {11, 22, 33, 44} }
+  {"VOLUME", 0, {11, 22, 33, 44}, adjustSimpleCommand },
+  {"STEPS", 0, {11, 22, 33, 44}, adjustSimpleCommand },
+  {"BANDWIDTH", 0, {11, 22, 33, 44}, adjustSimpleCommand }
 };
 
 void setScreen(int dir) {
@@ -68,7 +73,9 @@ void chooseSetting() {
 }
 
 void updateSetting() {
-  settings[CURRENT_SETTING].index = settings[CURRENT_SETTING].index + KNOB;
+  int val = settings[CURRENT_SETTING].index;
+  settings[CURRENT_SETTING].index = val + KNOB;
+  settings[CURRENT_SETTING].func();
 }
 
 void displayOutput() {
@@ -109,3 +116,4 @@ void loop() {
   displayOutput();
   resetAll();
 }
+
