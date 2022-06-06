@@ -1,3 +1,6 @@
+#include <SI4735.h>
+SI4735 si4735;
+
 int KEY = 0;    // 1, 2, 3, 4
 int SCREEN = 0; // 0, 1, 2
 int KNOB = 0;     // -1, 0, 1
@@ -9,18 +12,25 @@ void sendCommand(String name, int val) {
   Serial.println("NOW+! THIS IS WHAT I CALL MUSIC");
   Serial.println(name + "~" + String(val));
 
-  // switch (name) {
-  //   case: "AVC": si4735.setAvcAmMaxGain(val); break;
-  //   case: "SOFTMUTE": si4735.setAmSoftMuteMaxAttenuation(val); break;
-  //   case: "CAPACITOR": si4735.setTuneFrequencyAntennaCapacitor(val); break;
-  //   case: "VOLUME": si4735.setVolume(val); break;
-  //   case: "STEPS": si4735.setFrequencyStep(val); break;
-  //   default: break;
-  // }
-
-  // settings[CURRENT_SETTING].items[index];
-  // case: "AGC": si4735.setAutomaticGainControl(val, _ATTENUATE[_ATTENUATE_DEFAULT]);
-  // case: "BANDWIDTH": si4735.setBandwidth(val, _LINENOISE[_LINENOISE_DEFAULT]);
+  if (name == "SOFTMUTE") {
+      si4735.setAmSoftMuteMaxAttenuation(val);
+  } else if (name == "AVC") {
+      si4735.setAvcAmMaxGain(val);
+  } else if (name == "STEPS") {
+      si4735.setFrequencyStep(val);
+  } else if (name == "CAPACITOR") {
+      si4735.setTuneFrequencyAntennaCapacitor(val);
+  } else if (name == "VOLUME") {
+      si4735.setVolume(val);
+  } else if (name == "AGC") {
+      si4735.setAutomaticGainControl(val, getSettingValueByName("ATTENUATE"));
+  } else if (name == "ATTENUATE") {
+      si4735.setAutomaticGainControl(getSettingValueByName("AGC"), val);
+  } else if (name == "BANDWIDTH") {
+      si4735.setBandwidth(val, getSettingValueByName("LINENOISE"));
+  } else if (name == "LINENOISE") {
+      si4735.setBandwidth(getSettingValueByName("BANDWIDTH"), val);
+  }
 }
 
 typedef struct {
@@ -37,10 +47,24 @@ Settings settings[] = {
   { "AVC", 2, { 12, 48, 90 }, sendCommand},
   { "ATTENUATE", 0, { 0, 1, 5, 10, 25, 36 }, sendCommand},
   { "SOFTMUTE", 0, { 0, 1, 5, 8, 15, 20, 25, 32 }, sendCommand},
-  { "BANDWIDTH", 6, { 4, 5, 3, 6, 2, 1, 0 }, sendCommand},
+  { "BANDWIDTH", 0, { 0, 1, 2, 6, 3, 5, 4 }, sendCommand},
   { "CAPACITOR", 0, { 0, 1 }, sendCommand},
   { "LINENOISE", 0, { 0, 1 }, sendCommand}
 };
+
+int getSettingValueByName(String name) {
+  int totalSize = sizeof(settings) / sizeof(Settings);
+  int pos;
+  for (int i = 0; i < totalSize; i++) {
+    if(settings[i].name == name) {
+      pos = i;
+      break;
+    }
+  }
+  int selectedIndex = settings[pos].index;
+  int selectedValue = settings[pos].items[selectedIndex];
+  return selectedValue;
+}
 
 void setScreen(int dir) {
   int val = SCREEN + dir;
@@ -155,4 +179,3 @@ void loop() {
   displayOutput();
   resetAll();
 }
-
