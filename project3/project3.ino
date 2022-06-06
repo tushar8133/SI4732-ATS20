@@ -5,15 +5,22 @@ int CURRENT_SETTING = 0;
 int CURRENT_FREQUENCY = 12725;
 int CURRENT_STEP = 5;
 
-void sendCommand(String name, int param) {
-  Serial.println("COMMAND - NOW THIS IS WHAT I CALL MUSIC");
-  // int val = _BANDWIDTH_DEFAULT + dir;
-  // int size = (sizeof(_BANDWIDTH) / sizeof(_BANDWIDTH[0]));
-  // if (val >= 0 && val < size) {
-  //   _BANDWIDTH_DEFAULT = val;
+void sendCommand(String name, int val) {
+  Serial.println("NOW+! THIS IS WHAT I CALL MUSIC");
+  Serial.println(name + "~" + String(val));
+
+  // switch (name) {
+  //   case: "AVC": si4735.setAvcAmMaxGain(val); break;
+  //   case: "SOFTMUTE": si4735.setAmSoftMuteMaxAttenuation(val); break;
+  //   case: "CAPACITOR": si4735.setTuneFrequencyAntennaCapacitor(val); break;
+  //   case: "VOLUME": si4735.setVolume(val); break;
+  //   case: "STEPS": si4735.setFrequencyStep(val); break;
+  //   default: break;
   // }
-  // si4735.setBandwidth(_BANDWIDTH[_BANDWIDTH_DEFAULT], _LINENOISE[_LINENOISE_DEFAULT]);
-  // display5(_BANDWIDTH[_BANDWIDTH_DEFAULT]);
+
+  // settings[CURRENT_SETTING].items[index];
+  // case: "AGC": si4735.setAutomaticGainControl(val, _ATTENUATE[_ATTENUATE_DEFAULT]);
+  // case: "BANDWIDTH": si4735.setBandwidth(val, _LINENOISE[_LINENOISE_DEFAULT]);
 }
 
 typedef struct {
@@ -24,7 +31,7 @@ typedef struct {
 } Settings;
 
 Settings settings[] = {
-  { "VOLUME", 3, { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 63 }, sendCommand},
+  { "VOLUME", 3, { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 63 }, sendCommand},
   { "STEPS", 1, { 1, 5, 9 }, sendCommand},
   { "AGC", 0, { 1, 0 }, sendCommand},
   { "AVC", 2, { 12, 48, 90 }, sendCommand},
@@ -87,11 +94,27 @@ void spinSetting() {
 }
 
 void adjustSetting() {
-  int oldValue = settings[CURRENT_SETTING].index;
-  int newValue = oldValue + KNOB;
-  String name = settings[CURRENT_SETTING].name;
-  settings[CURRENT_SETTING].index = newValue;
-  settings[CURRENT_SETTING].func(name, newValue);
+  int totalSize = sizeof (settings[CURRENT_SETTING].items) / sizeof (settings[CURRENT_SETTING].items[0]);
+  int blankSize = 0;
+  for (int i = (totalSize-1); i >= 0; i--) {
+    if(settings[CURRENT_SETTING].items[i] == 0) {
+      blankSize++;
+    } else {
+      break;
+    }
+  }
+  int actualSize = (totalSize - blankSize);
+
+  int oldIndex = settings[CURRENT_SETTING].index;
+  int newIndex = oldIndex + KNOB;
+
+  if (newIndex >= 0 && newIndex < actualSize ) {
+    settings[CURRENT_SETTING].index = newIndex;
+    String name = settings[CURRENT_SETTING].name;
+    int val = settings[CURRENT_SETTING].items[newIndex];
+    settings[CURRENT_SETTING].func(name, val);
+  }
+
 }
 
 void displayOutput() {
