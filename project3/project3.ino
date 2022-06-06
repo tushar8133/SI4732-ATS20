@@ -8,51 +8,57 @@ int CURRENT_SETTING = 0;
 int CURRENT_FREQUENCY = 12725;
 int CURRENT_STEP = 5;
 
-void sendCommand(String name, int val) {
-  Serial.println("NOW+! THIS IS WHAT I CALL MUSIC");
-  Serial.println(name + "~" + String(val));
+enum Modes {
+  SOFTMUTE,
+  AVC,
+  STEPS,
+  CAPACITOR,
+  VOLUME,
+  AGC,
+  ATTENUATE,
+  BANDWIDTH,
+  LINENOISE,
+};
 
-  if (name == "SOFTMUTE") {
-      si4735.setAmSoftMuteMaxAttenuation(val);
-  } else if (name == "AVC") {
-      si4735.setAvcAmMaxGain(val);
-  } else if (name == "STEPS") {
-      si4735.setFrequencyStep(val);
-  } else if (name == "CAPACITOR") {
-      si4735.setTuneFrequencyAntennaCapacitor(val);
-  } else if (name == "VOLUME") {
-      si4735.setVolume(val);
-  } else if (name == "AGC") {
-      si4735.setAutomaticGainControl(val, getSettingValueByName("ATTENUATE"));
-  } else if (name == "ATTENUATE") {
-      si4735.setAutomaticGainControl(getSettingValueByName("AGC"), val);
-  } else if (name == "BANDWIDTH") {
-      si4735.setBandwidth(val, getSettingValueByName("LINENOISE"));
-  } else if (name == "LINENOISE") {
-      si4735.setBandwidth(getSettingValueByName("BANDWIDTH"), val);
+void sendCommand(Modes name, int val) {
+  Serial.print("NOW+ THIS IS WHAT I CALL MUSIC! ");
+  Serial.print(name);
+  Serial.println("~"+String(val));
+
+  switch (name) {
+    case SOFTMUTE   : si4735.setAmSoftMuteMaxAttenuation(val);
+    case AVC        : si4735.setAvcAmMaxGain(val);
+    case STEPS      : si4735.setFrequencyStep(val);
+    case CAPACITOR  : si4735.setTuneFrequencyAntennaCapacitor(val);
+    case VOLUME     : si4735.setVolume(val);
+    case AGC        : si4735.setAutomaticGainControl(val, getSettingValueByName(ATTENUATE));
+    case ATTENUATE  : si4735.setAutomaticGainControl(getSettingValueByName(AGC), val);
+    case BANDWIDTH  : si4735.setBandwidth(val, getSettingValueByName(LINENOISE));
+    case LINENOISE  : si4735.setBandwidth(getSettingValueByName(BANDWIDTH), val);
+    default: break;
   }
 }
 
 typedef struct {
-  String name;
+  Modes name;
   int index;
   int items[20];
-  void (*func)(String, int);
+  void (*func)(Modes, int);
 } Settings;
 
 Settings settings[] = {
-  { "VOLUME", 3, { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 63 }, sendCommand},
-  { "STEPS", 1, { 1, 5, 9 }, sendCommand},
-  { "AGC", 0, { 1, 0 }, sendCommand},
-  { "AVC", 2, { 12, 48, 90 }, sendCommand},
-  { "ATTENUATE", 0, { 0, 1, 5, 10, 25, 36 }, sendCommand},
-  { "SOFTMUTE", 0, { 0, 1, 5, 8, 15, 20, 25, 32 }, sendCommand},
-  { "BANDWIDTH", 0, { 0, 1, 2, 6, 3, 5, 4 }, sendCommand},
-  { "CAPACITOR", 0, { 0, 1 }, sendCommand},
-  { "LINENOISE", 0, { 0, 1 }, sendCommand}
+  { VOLUME, 3, { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 63 }, sendCommand},
+  { STEPS, 1, { 1, 5, 9 }, sendCommand},
+  { AGC, 0, { 1, 0 }, sendCommand},
+  { AVC, 2, { 12, 48, 90 }, sendCommand},
+  { ATTENUATE, 0, { 0, 1, 5, 10, 25, 36 }, sendCommand},
+  { SOFTMUTE, 0, { 0, 1, 5, 8, 15, 20, 25, 32 }, sendCommand},
+  { BANDWIDTH, 6, { 4, 5, 3, 6, 2, 1, 0 }, sendCommand},
+  { CAPACITOR, 0, { 0, 1 }, sendCommand},
+  { LINENOISE, 0, { 0, 1 }, sendCommand}
 };
 
-int getSettingValueByName(String name) {
+int getSettingValueByName(Modes name) {
   int totalSize = sizeof(settings) / sizeof(Settings);
   int pos;
   for (int i = 0; i < totalSize; i++) {
@@ -134,7 +140,7 @@ void adjustSetting() {
 
   if (newIndex >= 0 && newIndex < actualSize ) {
     settings[CURRENT_SETTING].index = newIndex;
-    String name = settings[CURRENT_SETTING].name;
+    Modes name = settings[CURRENT_SETTING].name;
     int val = settings[CURRENT_SETTING].items[newIndex];
     settings[CURRENT_SETTING].func(name, val);
   }
@@ -143,7 +149,7 @@ void adjustSetting() {
 
 void displayOutput() {
   if (KEY != 0 || KNOB != 0) {
-    String name = settings[CURRENT_SETTING].name;
+    Modes name = settings[CURRENT_SETTING].name;
     int index = settings[CURRENT_SETTING].index;
     int val = settings[CURRENT_SETTING].items[index];
 
@@ -179,3 +185,4 @@ void loop() {
   displayOutput();
   resetAll();
 }
+
