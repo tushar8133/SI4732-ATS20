@@ -100,7 +100,84 @@ void adjustSetting() {
     int val = settings[CURRENT_SETTING].items[newIndex];
     settings[CURRENT_SETTING].func(name, val);
   }
+}
 
+void updateDisplay() {
+  if (KEY != 0 || KNOB != 0) {
+    String name = settings[CURRENT_SETTING].name;
+    int index = settings[CURRENT_SETTING].index;
+    int val = settings[CURRENT_SETTING].items[index];
+
+    if (SCREEN == 0) {
+      display1(String(CURRENT_FREQUENCY));
+      display2("");
+    } else if (SCREEN == 1) {
+      display2("Settings >> " + name);
+      display1("");
+    } else if (SCREEN == 2) {
+      display2(String(name) + " >> " + val);
+    }
+  } else if (INIT) {
+    display1(String(CURRENT_FREQUENCY));
+    INIT = false;
+  }
+}
+
+void display0() {
+  oled.begin();
+  oled.clear();
+  oled.on();
+  oled.setFont(FONT8X16ATARI);
+  oled.setCursor(0, 0);
+  oled.print("LOADING...");
+}
+
+void display1(String str) {
+  oled.setFont(FONT8X16ATARI);
+  oled.setCursor(0, 0);
+  oled.print("              ");
+  oled.setCursor(0, 0);
+  oled.print(str);
+}
+
+void display2(String str) {
+  oled.setFont(FONT6X8);
+  oled.setCursor(0, 3);
+  oled.print("                     ");
+  oled.setCursor(0, 3);
+  oled.print(str);
+}
+
+void resetAll() {
+  KEY = 0;
+  KNOB = 0;
+}
+
+void reactToKnob() {
+  if (KNOB != 0) {
+    switch (SCREEN) {
+      case 0: updateFrequency(); break;
+      case 1: spinSetting(); break;
+      case 2: adjustSetting(); break;
+      default: break;
+    }
+  }
+}
+
+void reactToKeys() {
+  /*
+  |----|----|----|----|
+  | 08 | 06 | 10 | 11 |   02      03
+  |----|----|----|----|  <--- 14 --->
+  | 09 | 07 | 05 | 04 |
+  |----|----|----|----|
+  */
+  switch (KEY) {
+    case 8: setScreen(-1); break;
+    case 6: setScreen(1); break;
+    default: break;
+  }
+  delay(200);
 }
 
 void detectKeys() {
@@ -120,60 +197,17 @@ void detectKnob() {
   KNOB = (encoder.process() == DIR_CW) ? 1 : -1;
 }
 
-void reactToKeys() {
-  /*
-  |----|----|----|----|
-  | 08 | 06 | 10 | 11 |   02      03
-  |----|----|----|----|  <--- 14 --->
-  | 09 | 07 | 05 | 04 |
-  |----|----|----|----|
-  */
-  switch (KEY) {
-    case 8: setScreen(-1); break;
-    case 6: setScreen(1); break;
-    default: break;
-  }
-  delay(200);
-}
-
-void reactToKnob() {
-  if (KNOB != 0) {
-    switch (SCREEN) {
-      case 0: updateFrequency(); break;
-      case 1: spinSetting(); break;
-      case 2: adjustSetting(); break;
-      default: break;
-    }
-  }
-}
-
-void displayOutput() {
-  if (KEY != 0 || KNOB != 0) {
-    String name = settings[CURRENT_SETTING].name;
-    int index = settings[CURRENT_SETTING].index;
-    int val = settings[CURRENT_SETTING].items[index];
-
-    switch (SCREEN) {
-      case 0: Serial.println(CURRENT_FREQUENCY); break;
-      case 1: Serial.println("Settings >> " + name); break;
-      case 2: Serial.println(String(name) + " >> " + val); break;
-      default: break;
-    }
-  } else if (INIT) {
-    Serial.println(CURRENT_FREQUENCY);
-    INIT = false;
-  }
-}
-
-void resetAll() {
-  KEY = 0;
-  KNOB = 0;
-}
-
 void addKeysListener() {
-  for (int i = 2; i <= 11; i++) {
-    pinMode(i, INPUT_PULLUP);
-  }
+  pinMode(2, INPUT_PULLUP);
+  pinMode(3, INPUT_PULLUP);
+  pinMode(4, INPUT_PULLUP);
+  pinMode(5, INPUT_PULLUP);
+  pinMode(6, INPUT_PULLUP);
+  pinMode(7, INPUT_PULLUP);
+  pinMode(8, INPUT_PULLUP);
+  pinMode(9, INPUT_PULLUP);
+  pinMode(10, INPUT_PULLUP);
+  pinMode(11, INPUT_PULLUP);
   pinMode(14, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(2), detectKnob, CHANGE);
   attachInterrupt(digitalPinToInterrupt(3), detectKnob, CHANGE);
@@ -181,8 +215,8 @@ void addKeysListener() {
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("Loading...");
   addKeysListener();
+  display0();
   delay(100);
 }
 
@@ -190,6 +224,6 @@ void loop() {
   detectKeys();
   reactToKeys();
   reactToKnob();
-  displayOutput();
+  updateDisplay();
   resetAll();
 }
