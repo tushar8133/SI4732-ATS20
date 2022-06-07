@@ -1,9 +1,15 @@
 #include <SI4735.h>
-SI4735 si4735;
+#include <EEPROM.h>
+#include <Tiny4kOLED.h>
+#include <font8x16atari.h>
+#include "Rotary.h"
 
+SI4735 si4735;
+Rotary encoder = Rotary(2, 3);
+
+volatile int KNOB = 0;     // -1, 0, 1
 int KEY = 0;    // 1, 2, 3, 4
 int SCREEN = 0; // 0, 1, 2
-int KNOB = 0;     // -1, 0, 1
 int CURRENT_SETTING = 0;
 int CURRENT_FREQUENCY = 12725;
 int CURRENT_STEP = 5;
@@ -31,7 +37,7 @@ typedef struct {
 Settings settings[] = {
   { "VOLUME", 3, { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 63 }, sendCommand},
   { "STEPS", 1, { 1, 5, 9 }, sendCommand},
-  { "AGC", 0, { 1, 0 }, sendCommand},
+  { "AGC", 0, { 0, 1 }, sendCommand},
   { "AVC", 2, { 12, 48, 90 }, sendCommand},
   { "ATTENUATE", 0, { 0, 1, 5, 10, 25, 36 }, sendCommand},
   { "SOFTMUTE", 0, { 0, 1, 5, 8, 15, 20, 25, 32 }, sendCommand},
@@ -99,6 +105,15 @@ void adjustSetting() {
 
 void detectKeys() {
   KEY = Serial.parseInt();
+  if (digitalRead(4) == LOW) KEY = 4; else
+  if (digitalRead(5) == LOW) KEY = 5; else
+  if (digitalRead(6) == LOW) KEY = 6; else
+  if (digitalRead(7) == LOW) KEY = 7; else
+  if (digitalRead(8) == LOW) KEY = 8; else
+  if (digitalRead(9) == LOW) KEY = 9; else
+  if (digitalRead(10) == LOW) KEY = 10; else
+  if (digitalRead(11) == LOW) KEY = 11; else
+  if (digitalRead(14) == LOW) KEY = 14;
 }
 
 void detectKnob() {
@@ -107,9 +122,16 @@ void detectKnob() {
 }
 
 void reactToKeys() {
+  /*
+  |----|----|----|----|
+  | 08 | 06 | 10 | 11 |   02      03
+  |----|----|----|----|  <--- 14 --->
+  | 09 | 07 | 05 | 04 |
+  |----|----|----|----|
+  */
   switch (KEY) {
-    case 1: setScreen(-1); break;
-    case 2: setScreen(1); break;
+    case 8: setScreen(-1); break;
+    case 6: setScreen(1); break;
     default: break;
   }
   delay(200);
@@ -149,9 +171,24 @@ void resetAll() {
   KNOB = 0;
 }
 
+void rotaryEncoder()
+{
+  KNOB = (encoder.process() == DIR_CW) ? 1 : -1;
+}
+
+void addKeysListener() {
+  for (int i = 2; i <= 11; i++) {
+    pinMode(i, INPUT_PULLUP);
+  }
+  pinMode(14, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(2), rotaryEncoder, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(3), rotaryEncoder, CHANGE);
+}
+
 void setup() {
   Serial.begin(9600);
   Serial.println("Loading...");
+  addKeysListener();
   delay(100);
 }
 
