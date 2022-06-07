@@ -1,6 +1,6 @@
 # Tiny4kOLED
 
-This is a library for an ATTiny85 to use an SSD1306 powered, 128x64 pixel OLED, over I<sup>2</sup>C, with double buffering support for the common 128x32 sized screen.
+This is a library for an ATTiny85 to use an SSD1306 powered, double buffered, 128x32 pixel OLED, over I<sup>2</sup>C.
 
 The SSD1306 has enough RAM to support a 128 by 64 pixel display, and most SSD1306 controlled OLEDs are 128 by 64 pixels. However there are also other display sizes available. With a 128 by 32 pixel display, only half of the SSD1306's RAM is used, and the other half can be used as a frame buffer. This results in being able to have a slow ATTiny85 gradually update the display, then switch it into view when it is ready.
 
@@ -28,43 +28,6 @@ I have extensively re-written it, with the following changes:
   - Ability to select the voltage used by the internal charge pump (results in a minor difference in brightness).
   - Ability to horizontally scroll a portion of the display by one pixel (`scrollContentLeft` and `scrollContentRight`).
 - v1.5 Added init sequences and offsets for 128x64, 128x32, 72x40, 64x48, and 64x32 resolution screens.
-- v2.0 Extended the format used for fonts, adding support for:
-  - Proportional fonts.
-  - Multiple font subsets and unicode ranges.
-  - UTF-8 encoded strings.
-  - Printing double size text, with and without smoothing.
-  - Option to reduce memory usage if print functions are not required.
-- v2.1 Added support for a user callback function to combine images. See the BatteryMonitor example.
-- v2.2 Replaced double size printing methods with double sized font selection methods.
-  - Standard print methods, Unicode fonts, and new lines now work correctly with double sized text. See [Refactoring to support double sized rendering](https://github.com/datacute/Tiny4kOLED/wiki/Refactoring-to-support-double-sized-rendering). (Note: Double size text only works with fonts up to 16 pixels high.)
-  - Added clearToEOP and fillToEOP where P stands for page, and fixed issue #10 so the EOL methods work with font heights larger than 8 pixels (1 page).
-  - Added a 4th I<sup>2</sup>C interface to do raw bit-banging, but ignoring all the I<sup>2</sup>C rules.
-
-## I2C Speeds
-
-v2.2 added an I<sup>2</sup>C speed test example, which demonstrates really well why the various implementations were added:
-
-| Implementation | Time to write 128x64 screen |
-| ------------- | ------------- |
-| Wire (Default) | 348 ms |
-| TinyWireM | 142 ms |
-| tiny-i2c | 56 ms |
-| bitbang | 45 ms |
-
-## Online Simulator
-
-The Wokwi Online Arduino Simulator has quite good support for the core features of the 128x64 SSD1306. Here are links to some of the Tiny4kOLED examples:
-
-- [Bitmap](https://wokwi.com/arduino/projects/319464359609762388)
-- [Custom Chinese Font](https://wokwi.com/arduino/projects/319464288025576020)
-- [Datacute Boxy Font](https://wokwi.com/arduino/projects/319464228287152724)
-- [Devices-128x32](https://wokwi.com/arduino/projects/319464160996885075)
-- [Devices-128x64](https://wokwi.com/arduino/projects/319464123042628178)
-- [Features Menu](https://wokwi.com/arduino/projects/319463831239656019)
-- [Double Buffered Display](https://wokwi.com/arduino/projects/319463992706728532)
-- [Unicode Font](https://wokwi.com/arduino/projects/319465327109866067)
-- [Double-Size Smooth Text](https://wokwi.com/arduino/projects/319466098578686547)
-- [Battery Monitor](https://wokwi.com/arduino/projects/321659614952161874)
 
 ## 128x64 / 128x32 / 72x40 / 64x48 / 64x32
 
@@ -105,14 +68,6 @@ The `b` at the end means `b`right. The `r` at the end means `r`otated.
     oled.begin(64, 32, sizeof(tiny4koled_init_64x32b), tiny4koled_init_64x32b);
     oled.begin(64, 32, sizeof(tiny4koled_init_64x32r), tiny4koled_init_64x32r);
     oled.begin(64, 32, sizeof(tiny4koled_init_64x32br), tiny4koled_init_64x32br);
-```
-
-The SSD1306 remembers many of its settings even when powered off. After experimenting with various features, it can be useful to reset all the settings to the default values, which can be done with the following initialization sequence (Note: by default the charge pump is turned off):
-
-```c
-    oled.begin(128, 64, sizeof(tiny4koled_init_defaults), tiny4koled_init_defaults);
-    oled.enableChargePump(); // The default is off, but most boards need this.
-    oled.setRotation(1);     // The default orientation is not the most commonly used.
 ```
 
 ## Example Usage

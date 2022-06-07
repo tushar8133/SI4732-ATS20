@@ -4,16 +4,16 @@
 #include <font8x16atari.h>
 #include <Rotary.h>
 
-SI4735 si4735;
-Rotary encoder = Rotary(2, 3);
-
 volatile int KNOB = 0;     // -1, 0, 1
 int KEY = 0;    // 1, 2, 3, 4
 int SCREEN = 0; // 0, 1, 2
 int CURRENT_SETTING = 0;
-int CURRENT_FREQUENCY = 12725;
+int CURRENT_FREQUENCY = 9655;
 int CURRENT_STEP = 5;
 bool INIT = true;
+
+SI4735 si4735;
+Rotary encoder = Rotary(2, 3);
 
 void sendCommand(String name, int val) {
   if (name == "SOFTMUTE")    si4735.setAmSoftMuteMaxAttenuation(val); else
@@ -35,7 +35,7 @@ typedef struct {
 } Settings;
 
 Settings settings[] = {
-  { "VOLUME", 3, { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 63 }, sendCommand},
+  { "VOLUME", 8, { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 63 }, sendCommand},
   { "STEPS", 1, { 1, 5, 9 }, sendCommand},
   { "AVC", 1, { 12, 48, 90 }, sendCommand},
   { "SOFTMUTE", 3, { 0, 1, 5, 8, 15, 20, 25, 32 }, sendCommand},
@@ -64,6 +64,7 @@ void setScreen(int dir) {
   int val = SCREEN + dir;
   if (val >= 0 && val <= 2) {
     SCREEN = val;
+    delay(100);
   }
 }
 
@@ -177,11 +178,9 @@ void reactToKeys() {
     case 6: setScreen(1); break;
     default: break;
   }
-  delay(200);
 }
 
 void detectKeys() {
-  KEY = Serial.parseInt();
   if (digitalRead(4) == LOW) KEY = 4; else
   if (digitalRead(5) == LOW) KEY = 5; else
   if (digitalRead(6) == LOW) KEY = 6; else
@@ -194,7 +193,10 @@ void detectKeys() {
 }
 
 void detectKnob() {
-  KNOB = (encoder.process() == DIR_CW) ? 1 : -1;
+  uint8_t encoderStatus = encoder.process();
+  if (encoderStatus) {
+    KNOB = (encoderStatus == DIR_CW) ? 1 : -1;
+  }
 }
 
 void addKeysListener() {
@@ -209,15 +211,27 @@ void addKeysListener() {
   pinMode(10, INPUT_PULLUP);
   pinMode(11, INPUT_PULLUP);
   pinMode(14, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(2), detectKnob, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(3), detectKnob, CHANGE);
 }
 
 void setup() {
-  Serial.begin(9600);
   addKeysListener();
   display0();
+  delay(3000);
+  attachInterrupt(digitalPinToInterrupt(2), detectKnob, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(3), detectKnob, CHANGE);
+  si4735.getDeviceI2CAddress(12); // Looks for the I2C bus address and set it.  Returns 0 if error
+  si4735.setup(12, 1); //
+  si4735.setAvcAmMaxGain(getSettingValueByName("AVC")); // Sets the maximum gain for automatic volume control on AM/SSB mode (between 12 and 90dB)
+  delay(500);
+  si4735.setTuneFrequencyAntennaCapacitor(getSettingValueByName("CAPACITOR")); // Related to VARACTOR. Official recommendation is 0, but PU2CLR has set to 1 for SW/MW and 0 for LW
+  si4735.setAM(100, 30000, CURRENT_FREQUENCY, getSettingValueByName("STEPS"));
+  si4735.setAutomaticGainControl(getSettingValueByName("AGC"), getSettingValueByName("ATTENUATE")); // This param selects whether the AGC is enabled or disabled (0 = AGC enabled; 1 = AGC disabled) | AGC Index (0 = Minimum attenuation (max gain) 1 – 36 = Intermediate attenuation) if >greater than 36 - Maximum attenuation (min gain) )
+  si4735.setAmSoftMuteMaxAttenuation(getSettingValueByName("SOFTMUTE")); // This function can be useful to disable Soft Mute. The value 0 disable soft mute. Specified in units of dB. Default maximum attenuation is 8 dB. Goes til 32. It works for AM and SSB.
+  si4735.setBandwidth(getSettingValueByName("BANDWIDTH"), getSettingValueByName("LINENOISE")); // BW 0=6kHz,  1=4kHz,  2=3kHz,  3=2kHz,  4=1kHz,  5=1.8kHz,  6=2.5kHz . The default bandwidth is 2 kHz. It works only in AM / SSB (LW/MW/SW) | Enables the AM Power Line Noise Rejection Filter.
+  si4735.setSeekAmLimits(100, 30000);
+  si4735.setSeekAmSpacing(10); // Selects frequency spacingfor AM seek. Default is 10 kHz spacing.
   delay(100);
+  si4735.setVolume(getSettingValueByName("VOLUME"));
 }
 
 void loop() {

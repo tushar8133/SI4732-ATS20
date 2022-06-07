@@ -51,10 +51,6 @@ static void tiny4koled_begin_tinyi2c(void) {
 #endif
 }
 
-#ifndef TINY4KOLED_NO_PRINT
-SSD1306PrintDevice oled(&tiny4koled_begin_tinyi2c, &tiny4koled_beginTransmission_tinyi2c, &datacute_write_tinyi2c, &datacute_endTransmission_tinyi2c);
-#else
 SSD1306Device oled(&tiny4koled_begin_tinyi2c, &tiny4koled_beginTransmission_tinyi2c, &datacute_write_tinyi2c, &datacute_endTransmission_tinyi2c);
-#endif
 
 #endif
