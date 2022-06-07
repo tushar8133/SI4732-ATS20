@@ -9,18 +9,18 @@ int CURRENT_FREQUENCY = 12725;
 int CURRENT_STEP = 5;
 
 void sendCommand(String name, int val) {
-Serial.println("NOW+! THIS IS WHAT I CALL MUSIC");
-Serial.println(name + "~" + String(val));
+  Serial.print("NOW+ THIS IS WHAT I CALL MUSIC! ");
+  Serial.println(name + "~" + String(val));
 
-  if      (name == "SOFTMUTE")    si4735.setAmSoftMuteMaxAttenuation(val);
-  else if (name == "AVC")         si4735.setAvcAmMaxGain(val);
-  else if (name == "STEPS")       si4735.setFrequencyStep(val);
-  else if (name == "CAPACITOR")   si4735.setTuneFrequencyAntennaCapacitor(val);
-  else if (name == "VOLUME")      si4735.setVolume(val);
-  else if (name == "AGC")         si4735.setAutomaticGainControl(val, getSettingValueByName("ATTENUATE"));
-  else if (name == "ATTENUATE")   si4735.setAutomaticGainControl(getSettingValueByName("AGC"), val);
-  else if (name == "BANDWIDTH")   si4735.setBandwidth(val, getSettingValueByName("LINENOISE"));
-  else if (name == "LINENOISE")   si4735.setBandwidth(getSettingValueByName("BANDWIDTH"), val);
+  if (name == "SOFTMUTE")    si4735.setAmSoftMuteMaxAttenuation(val); else
+  if (name == "AVC")         si4735.setAvcAmMaxGain(val); else
+  if (name == "STEPS")       si4735.setFrequencyStep(val); else
+  if (name == "CAPACITOR")   si4735.setTuneFrequencyAntennaCapacitor(val); else
+  if (name == "VOLUME")      si4735.setVolume(val); else
+  if (name == "AGC")         si4735.setAutomaticGainControl(val, getSettingValueByName("ATTENUATE")); else
+  if (name == "ATTENUATE")   si4735.setAutomaticGainControl(getSettingValueByName("AGC"), val); else
+  if (name == "BANDWIDTH")   si4735.setBandwidth(val, getSettingValueByName("LINENOISE")); else
+  if (name == "LINENOISE")   si4735.setBandwidth(getSettingValueByName("BANDWIDTH"), val);
 
 }
 
@@ -64,38 +64,6 @@ void setScreen(int dir) {
   }
 }
 
-void detectKeys() {
-  KEY = Serial.parseInt();
-}
-
-void detectKnob() {
-  if (KEY == 3) {
-    KNOB = -1;
-  } else if (KEY == 4) {
-    KNOB = 1;
-  }
-}
-
-void reactToKeys() {
-  switch (KEY) {
-    case 1: setScreen(-1); break;
-    case 2: setScreen(1); break;
-    default: break;
-  }
-  delay(200);
-}
-
-void reactToKnob() {
-  if (KNOB != 0) {
-    switch (SCREEN) {
-      case 0: updateFrequency(); break;
-      case 1: spinSetting(); break;
-      case 2: adjustSetting(); break;
-      default: break;
-    }
-  }
-}
-
 void updateFrequency() {
   CURRENT_FREQUENCY = CURRENT_FREQUENCY + CURRENT_STEP * KNOB;
 }
@@ -132,22 +100,45 @@ void adjustSetting() {
 
 }
 
+void detectKeys() {
+  KEY = Serial.parseInt();
+}
+
+void detectKnob() {
+  if (KEY == 3) KNOB = -1; else
+  if (KEY == 4) KNOB = 1;
+}
+
+void reactToKeys() {
+  switch (KEY) {
+    case 1: setScreen(-1); break;
+    case 2: setScreen(1); break;
+    default: break;
+  }
+  delay(200);
+}
+
+void reactToKnob() {
+  if (KNOB != 0) {
+    switch (SCREEN) {
+      case 0: updateFrequency(); break;
+      case 1: spinSetting(); break;
+      case 2: adjustSetting(); break;
+      default: break;
+    }
+  }
+}
+
 void displayOutput() {
   if (KEY != 0 || KNOB != 0) {
     String name = settings[CURRENT_SETTING].name;
     int index = settings[CURRENT_SETTING].index;
     int val = settings[CURRENT_SETTING].items[index];
 
-    if (SCREEN == 0) {
-      Serial.println(CURRENT_FREQUENCY);
-    }
-    
-    if (SCREEN == 1) {
-      Serial.println(name +"~"+val);
-    }
-    
-    if (SCREEN == 2) {
-      Serial.println(val);
+    switch (SCREEN) {
+      case 0: Serial.println(CURRENT_FREQUENCY); break;
+      case 1: Serial.println("Settings >> " + name); break;
+      default: break;
     }
   }
 }
