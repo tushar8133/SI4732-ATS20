@@ -69,7 +69,12 @@ void setScreen(int dir) {
 }
 
 void updateFrequency() {
-  CURRENT_FREQUENCY = CURRENT_FREQUENCY + CURRENT_STEP * KNOB;
+  if(KNOB == 1) {
+    si4735.frequencyUp();
+  } else if (KNOB == -1) {
+    si4735.frequencyDown();
+  }
+  CURRENT_FREQUENCY = si4735.getFrequency();
 }
 
 void spinSetting() {
