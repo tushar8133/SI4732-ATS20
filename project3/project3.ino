@@ -117,8 +117,7 @@ void detectKeys() {
 }
 
 void detectKnob() {
-  if (KEY == 3) KNOB = -1; else
-  if (KEY == 4) KNOB = 1;
+  KNOB = (encoder.process() == DIR_CW) ? 1 : -1;
 }
 
 void reactToKeys() {
@@ -171,18 +170,13 @@ void resetAll() {
   KNOB = 0;
 }
 
-void rotaryEncoder()
-{
-  KNOB = (encoder.process() == DIR_CW) ? 1 : -1;
-}
-
 void addKeysListener() {
   for (int i = 2; i <= 11; i++) {
     pinMode(i, INPUT_PULLUP);
   }
   pinMode(14, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(2), rotaryEncoder, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(3), rotaryEncoder, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(2), detectKnob, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(3), detectKnob, CHANGE);
 }
 
 void setup() {
@@ -194,7 +188,6 @@ void setup() {
 
 void loop() {
   detectKeys();
-  detectKnob();
   reactToKeys();
   reactToKnob();
   displayOutput();
