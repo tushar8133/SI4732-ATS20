@@ -7,11 +7,9 @@ int KNOB = 0;     // -1, 0, 1
 int CURRENT_SETTING = 0;
 int CURRENT_FREQUENCY = 12725;
 int CURRENT_STEP = 5;
+bool INIT = true;
 
 void sendCommand(String name, int val) {
-  Serial.print("NOW+ THIS IS WHAT I CALL MUSIC! ");
-  Serial.println(name + "~" + String(val));
-
   if (name == "SOFTMUTE")    si4735.setAmSoftMuteMaxAttenuation(val); else
   if (name == "AVC")         si4735.setAvcAmMaxGain(val); else
   if (name == "STEPS")       si4735.setFrequencyStep(val); else
@@ -21,7 +19,6 @@ void sendCommand(String name, int val) {
   if (name == "ATTENUATE")   si4735.setAutomaticGainControl(getSettingValueByName("AGC"), val); else
   if (name == "BANDWIDTH")   si4735.setBandwidth(val, getSettingValueByName("LINENOISE")); else
   if (name == "LINENOISE")   si4735.setBandwidth(getSettingValueByName("BANDWIDTH"), val);
-
 }
 
 typedef struct {
@@ -138,8 +135,12 @@ void displayOutput() {
     switch (SCREEN) {
       case 0: Serial.println(CURRENT_FREQUENCY); break;
       case 1: Serial.println("Settings >> " + name); break;
+      case 2: Serial.println(String(name) + " >> " + val); break;
       default: break;
     }
+  } else if (INIT) {
+    Serial.println(CURRENT_FREQUENCY);
+    INIT = false;
   }
 }
 
@@ -150,7 +151,8 @@ void resetAll() {
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("START");
+  Serial.println("Loading...");
+  delay(100);
 }
 
 void loop() {
