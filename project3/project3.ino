@@ -1,8 +1,8 @@
 #include <SI4735.h>
-#include <EEPROM.h>
+// #include <EEPROM.h>
 #include <Tiny4kOLED.h>
 #include <font8x16atari.h>
-#include "Rotary.h"
+#include <Rotary.h>
 
 SI4735 si4735;
 Rotary encoder = Rotary(2, 3);
@@ -48,7 +48,7 @@ Settings settings[] = {
 
 int getSettingValueByName(String name) {
   int totalSize = sizeof(settings) / sizeof(Settings);
-  int pos;
+  int pos = 0;
   for (int i = 0; i < totalSize; i++) {
     if(settings[i].name == name) {
       pos = i;
