@@ -8,6 +8,7 @@ Add reset into settings
 Auto apply optimal settings as per selected band
 AGC/ATT auto adjust rectify
 Save station to EEPROM
+Volume BAR
 */
 
 #include <SI4735.h>
@@ -19,7 +20,7 @@ volatile int KNOB = 0;     // -1, 0, 1
 int KEY = 0;    // 1, 2, 3, 4
 int SCREEN = 0; // 0, 1, 2
 int CURRENT_SETTING = 0;
-int FREQUENCY[5] = {0, 9, 6, 5, 5};
+int FREQUENCY[5] = {0, 0, 8, 1, 9};
 int CURRENT_STEP = 5;
 bool INIT = true;
 
@@ -173,27 +174,19 @@ void display0() {
 }
 
 void display1(bool show) {
-  oled.setFont(FONT8X16ATARI);
   int margin = 25;
   int cursorPos = FREQUENCY[0];
-  if (show && cursorPos != 0) {
-    oled.setCursor( (margin * cursorPos), 0);
-    oled.print("  ");
-    oled.invertOutput(true);
-    oled.setCursor( (margin * cursorPos), 0);
-    oled.print(FREQUENCY[cursorPos]);
-    oled.invertOutput(false);
-  } else if (show && cursorPos == 0) {
-    oled.setCursor(0, 0);
-    oled.print("              ");
+  oled.setFont(FONT8X16ATARI);
+  oled.setCursor(0, 0);
+  oled.print("              ");
+  if (show) {
     for (int i = 1; i <= 4; ++i)
     {
+      if (cursorPos == i) oled.invertOutput(true);
       oled.setCursor( (margin * i), 0);
       oled.print(FREQUENCY[i]);
+      if (cursorPos == i) oled.invertOutput(false);
     }
-  } else {
-    oled.setCursor(0, 0);
-    oled.print("              ");
   }
 }
 
@@ -277,7 +270,12 @@ void addKeysListener() {
 void frequencyJumper(int dir) {
   int oldPos = FREQUENCY[0];
   int newPos = oldPos + dir;
-  FREQUENCY[0] = (newPos < 1 || newPos > 4) ? 0 : newPos;
+  if (dir == 1 && newPos > 4) {
+    newPos = 0;
+  } else if (dir == -1 && newPos < 0) {
+    newPos = 4;
+  }
+  FREQUENCY[0] = newPos;
 }
 
 void convertFreqToDigits(int freq) {
