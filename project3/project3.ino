@@ -228,11 +228,31 @@ void reactToKeys() {
     case 6: setScreen(1); break;
     case 9: frequencyJumper(-1); break;
     case 7: frequencyJumper(1); break;
+    case 5: seekStation(-1); break;
+    case 4: seekStation(1); break;
     default: break;
   }
   if(KEY != 0) {
     delay(200);
   }
+}
+
+void seekStation(int dir) {
+  if (dir == 1) {
+    display2("        >>>>");
+    // si4735.seekStation(1, 1);
+    // si4735.seekNextStation();
+    // si4735.seekStationProgress(convertFreqToDigits,1);
+    si4735.seekStationUp();
+  } else {
+    display2("        <<<<");
+    // si4735.seekStation(0, 1);
+    // si4735.seekPreviousStation();
+    // si4735.seekStationProgress(convertFreqToDigits,0);
+    si4735.seekStationDown();
+  }
+  int freq = si4735.getFrequency();
+  convertFreqToDigits(freq);
 }
 
 void detectKeys() {
@@ -308,7 +328,7 @@ void setup() {
   si4735.setAmSoftMuteMaxAttenuation(getSettingValueByName("SOFTMUTE")); // This function can be useful to disable Soft Mute. The value 0 disable soft mute. Specified in units of dB. Default maximum attenuation is 8 dB. Goes til 32. It works for AM and SSB.
   si4735.setBandwidth(getSettingValueByName("BANDWIDTH"), getSettingValueByName("LINENOISE")); // BW 0=6kHz,  1=4kHz,  2=3kHz,  3=2kHz,  4=1kHz,  5=1.8kHz,  6=2.5kHz . The default bandwidth is 2 kHz. It works only in AM / SSB (LW/MW/SW) | Enables the AM Power Line Noise Rejection Filter.
   si4735.setSeekAmLimits(100, 30000);
-  si4735.setSeekAmSpacing(10); // Selects frequency spacingfor AM seek. Default is 10 kHz spacing.
+  si4735.setSeekAmSpacing(1); // Selects frequency spacingfor AM seek. Default is 10 kHz spacing.
   delay(100);
   si4735.setVolume(getSettingValueByName("VOLUME"));
 }
