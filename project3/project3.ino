@@ -8,7 +8,7 @@ volatile int KNOB = 0;     // -1, 0, 1
 int KEY = 0;    // 1, 2, 3, 4
 int SCREEN = 0; // 0, 1, 2
 int CURRENT_SETTING = 0;
-int CURRENT_FREQUENCY = 9655;
+int FREQUENCY[5] = {0, 9, 6, 5, 5};
 int CURRENT_STEP = 5;
 bool INIT = true;
 
@@ -64,17 +64,40 @@ void setScreen(int dir) {
   int val = SCREEN + dir;
   if (val >= 0 && val <= 2) {
     SCREEN = val;
-    delay(100);
   }
 }
 
 void updateFrequency() {
-  if(KNOB == 1) {
-    si4735.frequencyUp();
-  } else if (KNOB == -1) {
-    si4735.frequencyDown();
+  if (FREQUENCY[0] != 0) {
+    int pos = FREQUENCY[0];
+    int oldDigit = FREQUENCY[pos];
+    int newDigit = 0;
+    if(pos == 1) {
+      newDigit = digitHelper(oldDigit, 0, 30);
+    } else {
+      newDigit = digitHelper(oldDigit, 0, 9);
+    }
+    FREQUENCY[pos] = newDigit;
+    si4735.setFrequency(convertDigitsToFreq());
+  } else {
+    if (KNOB == 1) {
+      si4735.frequencyUp();
+    } else if (KNOB == -1) {
+      si4735.frequencyDown();
+    }
+    convertFreqToDigits(si4735.getFrequency());
   }
-  CURRENT_FREQUENCY = si4735.getFrequency();
+}
+
+int digitHelper(int num, int mn, int mx) {
+  int val = num + KNOB;
+  if (val < mn) {
+    return mx;
+  } else if (val > mx) {
+    return mn;
+  } else {
+    return val;
+  }
 }
 
 void spinSetting() {
@@ -115,16 +138,16 @@ void updateDisplay() {
     int val = settings[CURRENT_SETTING].items[index];
 
     if (SCREEN == 0) {
-      display1(String(CURRENT_FREQUENCY));
+      display1(true);
       display2("");
     } else if (SCREEN == 1) {
       display2("Settings >> " + name);
-      display1("");
+      display1(false);
     } else if (SCREEN == 2) {
       display2(String(name) + " >> " + val);
     }
   } else if (INIT) {
-    display1(String(CURRENT_FREQUENCY));
+    display1(true);
     INIT = false;
   }
 }
@@ -138,12 +161,29 @@ void display0() {
   oled.print("LOADING...");
 }
 
-void display1(String str) {
+void display1(bool show) {
   oled.setFont(FONT8X16ATARI);
-  oled.setCursor(0, 0);
-  oled.print("              ");
-  oled.setCursor(0, 0);
-  oled.print(str);
+  int margin = 25;
+  int cursorPos = FREQUENCY[0];
+  if (show && cursorPos != 0) {
+    oled.setCursor( (margin * cursorPos), 0);
+    oled.print("  ");
+    oled.invertOutput(true);
+    oled.setCursor( (margin * cursorPos), 0);
+    oled.print(FREQUENCY[cursorPos]);
+    oled.invertOutput(false);
+  } else if (show && cursorPos == 0) {
+    oled.setCursor(0, 0);
+    oled.print("              ");
+    for (int i = 1; i <= 4; ++i)
+    {
+      oled.setCursor( (margin * i), 0);
+      oled.print(FREQUENCY[i]);
+    }
+  } else {
+    oled.setCursor(0, 0);
+    oled.print("              ");
+  }
 }
 
 void display2(String str) {
@@ -181,7 +221,12 @@ void reactToKeys() {
   switch (KEY) {
     case 8: setScreen(-1); break;
     case 6: setScreen(1); break;
+    case 9: frequencyJumper(-1); break;
+    case 7: frequencyJumper(1); break;
     default: break;
+  }
+  if(KEY != 0) {
+    delay(200);
   }
 }
 
@@ -218,6 +263,25 @@ void addKeysListener() {
   pinMode(14, INPUT_PULLUP);
 }
 
+void frequencyJumper(int dir) {
+  int oldPos = FREQUENCY[0];
+  int newPos = oldPos + dir;
+  FREQUENCY[0] = (newPos < 1 || newPos > 4) ? 0 : newPos;
+}
+
+void convertFreqToDigits(int freq) {
+  FREQUENCY[4] = freq%10;
+  FREQUENCY[3] = (freq/10)%10;
+  FREQUENCY[2] = (freq/100)%10;
+  FREQUENCY[1] = freq/1000;
+}
+
+int convertDigitsToFreq() {
+  String str = String(FREQUENCY[1]) + String(FREQUENCY[2]) + String(FREQUENCY[3]) + String(FREQUENCY[4]);
+  int freq = str.toInt();
+  return freq;
+}
+
 void setup() {
   addKeysListener();
   display0();
@@ -229,7 +293,7 @@ void setup() {
   si4735.setAvcAmMaxGain(getSettingValueByName("AVC")); // Sets the maximum gain for automatic volume control on AM/SSB mode (between 12 and 90dB)
   delay(500);
   si4735.setTuneFrequencyAntennaCapacitor(getSettingValueByName("CAPACITOR")); // Related to VARACTOR. Official recommendation is 0, but PU2CLR has set to 1 for SW/MW and 0 for LW
-  si4735.setAM(100, 30000, CURRENT_FREQUENCY, getSettingValueByName("STEPS"));
+  si4735.setAM(100, 30000, convertDigitsToFreq(), getSettingValueByName("STEPS"));
   si4735.setAutomaticGainControl(getSettingValueByName("AGC"), getSettingValueByName("ATTENUATE")); // This param selects whether the AGC is enabled or disabled (0 = AGC enabled; 1 = AGC disabled) | AGC Index (0 = Minimum attenuation (max gain) 1 – 36 = Intermediate attenuation) if >greater than 36 - Maximum attenuation (min gain) )
   si4735.setAmSoftMuteMaxAttenuation(getSettingValueByName("SOFTMUTE")); // This function can be useful to disable Soft Mute. The value 0 disable soft mute. Specified in units of dB. Default maximum attenuation is 8 dB. Goes til 32. It works for AM and SSB.
   si4735.setBandwidth(getSettingValueByName("BANDWIDTH"), getSettingValueByName("LINENOISE")); // BW 0=6kHz,  1=4kHz,  2=3kHz,  3=2kHz,  4=1kHz,  5=1.8kHz,  6=2.5kHz . The default bandwidth is 2 kHz. It works only in AM / SSB (LW/MW/SW) | Enables the AM Power Line Noise Rejection Filter.
