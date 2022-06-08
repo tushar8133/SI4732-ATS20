@@ -7,6 +7,7 @@ Fix digit selection highlight
 Add reset into settings
 Auto apply optimal settings as per selected band
 AGC/ATT auto adjust rectify
+Save station to EEPROM
 */
 
 #include <SI4735.h>
