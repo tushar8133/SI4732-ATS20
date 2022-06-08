@@ -1,6 +1,5 @@
 /*
 TODO:
-
 show SNR
 show BATT
 Fix digit selection highlight
@@ -9,6 +8,8 @@ Auto apply optimal settings as per selected band
 AGC/ATT auto adjust rectify
 Save station to EEPROM
 Volume BAR
+Seek
+Skip unused band while manual tuning
 */
 
 #include <SI4735.h>
