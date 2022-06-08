@@ -1,5 +1,15 @@
+/*
+TODO:
+
+show SNR
+show BATT
+Fix digit selection highlight
+Add reset into settings
+Auto apply optimal settings as per selected band
+AGC/ATT auto adjust rectify
+*/
+
 #include <SI4735.h>
-// #include <EEPROM.h>
 #include <Tiny4kOLED.h>
 #include <font8x16atari.h>
 #include <Rotary.h>
