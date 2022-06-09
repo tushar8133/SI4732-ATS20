@@ -166,7 +166,7 @@ void updateDisplay() {
   }
 
   if (SCREEN == 0 && timeLimit()) {
-    si4735.getCurrentReceivedSignalQuality();
+    si4735.getCurrentReceivedSignalQuality(1);
     // si4735.getStatus();
 
     int b = si4735.getStatusSNR(); // works with seek. remain constant. may be reflecting values of getCurrentSNR()
@@ -188,9 +188,9 @@ void updateDisplay() {
     for (int i = 0; i < size; ++i)
     {
       if (i > (size/2)) {
-        str1 = str1 + String(arr[i]) + "|";
+        str1 = str1 + String(arr[i]) + " | ";
       } else {
-        str2 = str2 + String(arr[i]) + "|";
+        str2 = str2 + String(arr[i]) + " | ";
       }
     }
 
@@ -220,17 +220,23 @@ void display0() {
 }
 
 void display1(bool show) {
-  int margin = 25;
+  int margin = 85;
+  int inc = 8;
   int cursorPos = FREQUENCY[0];
   oled.setFont(FONT8X16ATARI);
   oled.setCursor(0, 0);
-  oled.print("              ");
+  oled.print("                ");
   if (show) {
     for (int i = 1; i <= 4; ++i)
     {
       if (cursorPos == i) oled.invertOutput(true);
-      oled.setCursor( (margin * i), 0);
-      oled.print(FREQUENCY[i]);
+      int cf = FREQUENCY[i];
+      if (cf > 9) {
+        oled.setCursor( margin, 0);
+      } else {
+        oled.setCursor( margin + (inc * i), 0);
+      }
+      oled.print(cf);
       if (cursorPos == i) oled.invertOutput(false);
     }
   }
