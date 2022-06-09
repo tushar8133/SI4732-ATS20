@@ -24,6 +24,7 @@ int CURRENT_SETTING = 0;
 int FREQUENCY[5] = {0, 0, 8, 1, 9};
 int CURRENT_STEP = 5;
 bool INIT = true;
+long timer = millis();
 
 SI4735 si4735;
 Rotary encoder = Rotary(2, 3);
@@ -163,6 +164,50 @@ void updateDisplay() {
     display1(true);
     INIT = false;
   }
+
+  if (SCREEN == 0 && timeLimit()) {
+    si4735.getCurrentReceivedSignalQuality();
+    // si4735.getStatus();
+
+    int b = si4735.getStatusSNR(); // works with seek. remain constant. may be reflecting values of getCurrentSNR()
+    int c = si4735.getReceivedSignalStrengthIndicator(); // works with seek. remain constant. may be reflecting values of getCurrentRSSI()
+    int d = si4735.getStatusValid(); // works with seek. remain constant. returns bool if found
+    int e = si4735.getCurrentRSSI(); // works fine. To be used with getCurrentReceivedSignalQuality() ??
+    int f = si4735.getCurrentSNR(); // works fine. To be used with getCurrentReceivedSignalQuality() ??
+    int g = si4735.getCurrentRssiDetectLow(); // constant 0. Not sure if any method be called prior to it.
+    int h = si4735.getCurrentRssiDetectHigh(); // constant 0. Not sure if any method be called prior to it.
+    int i = si4735.getCurrentSnrDetectLow(); // constant 0. Not sure if any method be called prior to it.
+    int j = si4735.getCurrentSnrDetectHigh(); // constant 0. Not sure if any method be called prior to it.
+
+    int arr[] = {b,c,d,e,f,g,h,i,j};
+
+    int size = (sizeof(arr) / sizeof(arr[0]));
+    String str1 = "";
+    String str2 = "";
+
+    for (int i = 0; i < size; ++i)
+    {
+      if (i > (size/2)) {
+        str1 = str1 + String(arr[i]) + "|";
+      } else {
+        str2 = str2 + String(arr[i]) + "|";
+      }
+    }
+
+    display4(str2);
+    display2(str1);
+  }
+
+}
+
+bool timeLimit() {
+  long currTime = millis();
+  if( currTime > timer) {
+    timer = millis() + 1000;
+    return true;
+  } else {
+    return false;
+  }
 }
 
 void display0() {
@@ -196,6 +241,14 @@ void display2(String str) {
   oled.setCursor(0, 3);
   oled.print("                     ");
   oled.setCursor(0, 3);
+  oled.print(str);
+}
+
+void display4(String str) {
+  oled.setFont(FONT6X8);
+  oled.setCursor(0, 2);
+  oled.print("                     ");
+  oled.setCursor(0, 2);
   oled.print(str);
 }
 
