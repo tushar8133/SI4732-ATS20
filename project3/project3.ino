@@ -56,7 +56,7 @@ Settings settings[] = {
   { "AGC", 0, { 0, 1 }, sendCommand},
   { "ATTENUATE", 0, { 0, 1, 5, 10, 25, 36 }, sendCommand},
   { "BANDWIDTH", 2, { 0, 1, 2, 6, 3, 5, 4 }, sendCommand},
-  { "CAPACITOR", 1, { 0, 1 }, sendCommand},
+  { "CAPACITOR", 0, { 0, 1 }, sendCommand},
   { "LINENOISE", 1, { 0, 1 }, sendCommand}
 };
 
@@ -166,7 +166,7 @@ void updateDisplay() {
   }
 
   if (SCREEN == 0 && timeLimit()) {
-    si4735.getCurrentReceivedSignalQuality(1); // use it before calling getCurrentRSSI() and getCurrentSNR()
+    si4735.getCurrentReceivedSignalQuality(); // use it before calling getCurrentRSSI() and getCurrentSNR()
     // si4735.getStatus();
 
     // int b = si4735.getStatusSNR(); // works with seek. remain constant. may be reflecting values of getCurrentSNR()
