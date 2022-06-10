@@ -78,6 +78,7 @@ void setScreen(int dir) {
   if (val >= 0 && val <= 2) {
     SCREEN = val;
   }
+  si4735.setFrequencyStep(settings[1].items[settings[1].index]);
 }
 
 void updateFrequency() {
@@ -315,15 +316,17 @@ void reactToKeys() {
 void seekStation(int dir) {
   si4735.setFrequencyStep(1);
   si4735.setSeekAmSpacing(1); // Default is 10 kHz spacing.
-  si4735.setSeekFmRssiThreshold(50); // Default is 25
-  si4735.setSeekAmSrnThreshold(8); // Default is 5
+  si4735.setSeekAmRssiThreshold(50); // Default is 25
+  // si4735.setSeekAmSNRThreshold(1); // Default is 5
   si4735.setMaxSeekTime(600000); // Default is 8
 
   if (dir == 1) {
-    display2(">>>>  SEARCHING  >>>>");
+    display4("---------------------");
+    display2("      SEARCHING >>   ");
     si4735.seekStationProgress(seekDisplay, seekStop, 1);
   } else {
-    display2("<<<<  SEARCHING  <<<<");
+    display4("---------------------");
+    display2("   << SEARCHING      ");
     si4735.seekStationProgress(seekDisplay, seekStop, 0);
   }
 }
