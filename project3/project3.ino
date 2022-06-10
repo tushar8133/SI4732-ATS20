@@ -21,7 +21,7 @@ volatile int KNOB = 0;     // -1, 0, 1
 int KEY = 0;    // 1, 2, 3, 4
 int SCREEN = 0; // 0, 1, 2
 int CURRENT_SETTING = 0;
-int FREQUENCY[5] = {0, 0, 8, 1, 9};
+int FREQUENCY[5] = {0, 7, 2, 0, 0};
 bool INIT = true;
 long timer = millis();
 
@@ -48,7 +48,7 @@ typedef struct {
 } Settings;
 
 Settings settings[] = {
-  { "VOLUME", 6, { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 63 }, sendCommand},
+  { "VOLUME", 8, { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 63 }, sendCommand},
   { "STEPS", 1, { 1, 5, 9, 10 }, sendCommand},
   { "AVC", 1, { 12, 48, 90 }, sendCommand},
   { "SOFTMUTE", 3, { 0, 1, 5, 8, 15, 20, 25, 32 }, sendCommand},
@@ -314,9 +314,9 @@ void reactToKeys() {
 
 void seekStation(int dir) {
   si4735.setFrequencyStep(1);
-  si4735.setSeekAmSpacing(5); // Default is 10 kHz spacing.
-  // si4735.setSeekFmRssiThreshold(20); // Default is 25
-  // si4735.setSeekAmSrnThreshold(5); // Default is 5
+  si4735.setSeekAmSpacing(1); // Default is 10 kHz spacing.
+  si4735.setSeekFmRssiThreshold(50); // Default is 25
+  si4735.setSeekAmSrnThreshold(8); // Default is 5
   si4735.setMaxSeekTime(600000); // Default is 8
 
   if (dir == 1) {
