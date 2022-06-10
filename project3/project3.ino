@@ -166,7 +166,7 @@ void updateDisplay() {
   }
 
   if (SCREEN == 0 && timeLimit()) {
-    si4735.getCurrentReceivedSignalQuality(1);
+    si4735.getCurrentReceivedSignalQuality(1); // use it before calling getCurrentRSSI() and getCurrentSNR()
     // si4735.getStatus();
 
     int b = si4735.getStatusSNR(); // works with seek. remain constant. may be reflecting values of getCurrentSNR()
