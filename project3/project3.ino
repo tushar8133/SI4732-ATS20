@@ -21,7 +21,7 @@ volatile int KNOB = 0;     // -1, 0, 1
 int KEY = 0;    // 1, 2, 3, 4
 int SCREEN = 0; // 0, 1, 2
 int CURRENT_SETTING = 0;
-int FREQUENCY[5] = {0, 0, 8, 1, 9};
+int FREQUENCY[5] = {0, 9, 6, 8, 5};
 int CURRENT_STEP = 5;
 bool INIT = true;
 long timer = millis();
@@ -182,8 +182,8 @@ void updateDisplay() {
     int sig = si4735.getCurrentRSSI();
     int snr = si4735.getCurrentSNR();
 
-    String sigBars = getBars(sig);
-    String snrBars = getBars(snr);
+    String sigBars = getBars(sig, 80, 13);
+    String snrBars = getBars(snr, 26, 13);
 
     String sigPad = getPadding(sig, 2);
     String snrPad = getPadding(snr, 2);
@@ -194,8 +194,9 @@ void updateDisplay() {
 
 }
 
-String getBars(int val) {
-  int bars = val/5.38;
+String getBars(int val, int maxLimit, int barLimit) {
+  int percent = maxLimit / barLimit;
+  int bars = val/percent;
   String fnl = "";
   for(int i = 0; i < bars; ++i) {
     fnl = fnl + "=";
@@ -219,7 +220,7 @@ String getPadding(int val, int padLength) {
 bool timeLimit() {
   long currTime = millis();
   if( currTime > timer) {
-    timer = millis() + 1000;
+    timer = millis() + 300;
     return true;
   } else {
     return false;
@@ -361,6 +362,8 @@ void addKeysListener() {
   pinMode(10, INPUT_PULLUP);
   pinMode(11, INPUT_PULLUP);
   pinMode(14, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(2), detectKnob, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(3), detectKnob, CHANGE);
 }
 
 void frequencyJumper(int dir) {
@@ -390,21 +393,17 @@ int convertDigitsToFreq() {
 void setup() {
   addKeysListener();
   display0();
-  delay(3000);
-  attachInterrupt(digitalPinToInterrupt(2), detectKnob, CHANGE);
-  attachInterrupt(digitalPinToInterrupt(3), detectKnob, CHANGE);
   si4735.getDeviceI2CAddress(12); // Looks for the I2C bus address and set it.  Returns 0 if error
   si4735.setup(12, 1); //
-  si4735.setAvcAmMaxGain(getSettingValueByName("AVC")); // Sets the maximum gain for automatic volume control on AM/SSB mode (between 12 and 90dB)
-  delay(500);
-  si4735.setTuneFrequencyAntennaCapacitor(getSettingValueByName("CAPACITOR")); // Related to VARACTOR. Official recommendation is 0, but PU2CLR has set to 1 for SW/MW and 0 for LW
   si4735.setAM(100, 30000, convertDigitsToFreq(), getSettingValueByName("STEPS"));
-  si4735.setAutomaticGainControl(getSettingValueByName("AGC"), getSettingValueByName("ATTENUATE")); // This param selects whether the AGC is enabled or disabled (0 = AGC enabled; 1 = AGC disabled) | AGC Index (0 = Minimum attenuation (max gain) 1 – 36 = Intermediate attenuation) if >greater than 36 - Maximum attenuation (min gain) )
-  si4735.setAmSoftMuteMaxAttenuation(getSettingValueByName("SOFTMUTE")); // This function can be useful to disable Soft Mute. The value 0 disable soft mute. Specified in units of dB. Default maximum attenuation is 8 dB. Goes til 32. It works for AM and SSB.
   si4735.setBandwidth(getSettingValueByName("BANDWIDTH"), getSettingValueByName("LINENOISE")); // BW 0=6kHz,  1=4kHz,  2=3kHz,  3=2kHz,  4=1kHz,  5=1.8kHz,  6=2.5kHz . The default bandwidth is 2 kHz. It works only in AM / SSB (LW/MW/SW) | Enables the AM Power Line Noise Rejection Filter.
   si4735.setSeekAmLimits(100, 30000);
   si4735.setSeekAmSpacing(1); // Selects frequency spacingfor AM seek. Default is 10 kHz spacing.
-  delay(100);
+  si4735.setAutomaticGainControl(getSettingValueByName("AGC"), getSettingValueByName("ATTENUATE")); // This param selects whether the AGC is enabled or disabled (0 = AGC enabled; 1 = AGC disabled) | AGC Index (0 = Minimum attenuation (max gain) 1 – 36 = Intermediate attenuation) if >greater than 36 - Maximum attenuation (min gain) )
+  si4735.setTuneFrequencyAntennaCapacitor(1); // Related to VARACTOR. Official recommendation is 0, but PU2CLR has set to 1 for SW/MW and 0 for LW
+  si4735.setTuneFrequencyAntennaCapacitor(getSettingValueByName("CAPACITOR")); // Related to VARACTOR. Official recommendation is 0, but PU2CLR has set to 1 for SW/MW and 0 for LW
+  si4735.setAvcAmMaxGain(getSettingValueByName("AVC")); // Sets the maximum gain for automatic volume control on AM/SSB mode (between 12 and 90dB)
+  si4735.setAmSoftMuteMaxAttenuation(getSettingValueByName("SOFTMUTE")); // This function can be useful to disable Soft Mute. The value 0 disable soft mute. Specified in units of dB. Default maximum attenuation is 8 dB. Goes til 32. It works for AM and SSB.
   si4735.setVolume(getSettingValueByName("VOLUME"));
 }
 
