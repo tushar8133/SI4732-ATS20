@@ -236,7 +236,7 @@ void display0() {
 }
 
 void display1(bool show) {
-  int margin = 85;
+  int margin = 45;
   int inc = 8;
   int cursorPos = FREQUENCY[0];
   oled.setFont(FONT8X16ATARI);
