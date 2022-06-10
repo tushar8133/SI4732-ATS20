@@ -169,35 +169,51 @@ void updateDisplay() {
     si4735.getCurrentReceivedSignalQuality(1); // use it before calling getCurrentRSSI() and getCurrentSNR()
     // si4735.getStatus();
 
-    int b = si4735.getStatusSNR(); // works with seek. remain constant. may be reflecting values of getCurrentSNR()
-    int c = si4735.getReceivedSignalStrengthIndicator(); // works with seek. remain constant. may be reflecting values of getCurrentRSSI()
-    int d = si4735.getStatusValid(); // works with seek. remain constant. returns bool if found
-    int e = si4735.getCurrentRSSI(); // works fine. To be used with getCurrentReceivedSignalQuality() ??
-    int f = si4735.getCurrentSNR(); // works fine. To be used with getCurrentReceivedSignalQuality() ??
-    int g = si4735.getCurrentRssiDetectLow(); // constant 0. Not sure if any method be called prior to it.
-    int h = si4735.getCurrentRssiDetectHigh(); // constant 0. Not sure if any method be called prior to it.
-    int i = si4735.getCurrentSnrDetectLow(); // constant 0. Not sure if any method be called prior to it.
-    int j = si4735.getCurrentSnrDetectHigh(); // constant 0. Not sure if any method be called prior to it.
+    // int b = si4735.getStatusSNR(); // works with seek. remain constant. may be reflecting values of getCurrentSNR()
+    // int c = si4735.getReceivedSignalStrengthIndicator(); // works with seek. remain constant. may be reflecting values of getCurrentRSSI()
+    // int d = si4735.getStatusValid(); // works with seek. remain constant. returns bool if found
+    // int e = si4735.getCurrentRSSI(); // works fine. To be used with getCurrentReceivedSignalQuality() ??
+    // int f = si4735.getCurrentSNR(); // works fine. To be used with getCurrentReceivedSignalQuality() ??
+    // int g = si4735.getCurrentRssiDetectLow(); // constant 0. Not sure if any method be called prior to it.
+    // int h = si4735.getCurrentRssiDetectHigh(); // constant 0. Not sure if any method be called prior to it.
+    // int i = si4735.getCurrentSnrDetectLow(); // constant 0. Not sure if any method be called prior to it.
+    // int j = si4735.getCurrentSnrDetectHigh(); // constant 0. Not sure if any method be called prior to it.
 
-    int arr[] = {b,c,d,e,f,g,h,i,j};
+    int sig = si4735.getCurrentRSSI();
+    int snr = si4735.getCurrentSNR();
 
-    int size = (sizeof(arr) / sizeof(arr[0]));
-    String str1 = "";
-    String str2 = "";
+    String sigBars = getBars(sig);
+    String snrBars = getBars(snr);
 
-    for (int i = 0; i < size; ++i)
-    {
-      if (i > (size/2)) {
-        str1 = str1 + String(arr[i]) + " | ";
-      } else {
-        str2 = str2 + String(arr[i]) + " | ";
-      }
-    }
+    String sigPad = getPadding(sig, 2);
+    String snrPad = getPadding(snr, 2);
 
-    display4(str2);
-    display2(str1);
+    display4("SIG "+sigPad+" "+sigBars);
+    display2("SNR "+snrPad+" "+snrBars);
   }
 
+}
+
+String getBars(int val) {
+  int bars = val/5.38;
+  String fnl = "";
+  for(int i = 0; i < bars; ++i) {
+    fnl = fnl + "=";
+  }
+  fnl = fnl + ">";
+  return fnl;
+}
+
+String getPadding(int val, int padLength) {
+  String str = String(val);
+  int len = str.length();
+  int zeroLength = padLength - len;
+  String fnl = "";
+  for (int i = 0; i < zeroLength; ++i) {
+    fnl = fnl + "0";
+  }
+  fnl += str;
+  return fnl;
 }
 
 bool timeLimit() {
