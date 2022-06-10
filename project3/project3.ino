@@ -21,8 +21,7 @@ volatile int KNOB = 0;     // -1, 0, 1
 int KEY = 0;    // 1, 2, 3, 4
 int SCREEN = 0; // 0, 1, 2
 int CURRENT_SETTING = 0;
-int FREQUENCY[5] = {0, 9, 6, 8, 5};
-int CURRENT_STEP = 5;
+int FREQUENCY[5] = {0, 0, 8, 1, 9};
 bool INIT = true;
 long timer = millis();
 
@@ -49,8 +48,8 @@ typedef struct {
 } Settings;
 
 Settings settings[] = {
-  { "VOLUME", 8, { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 63 }, sendCommand},
-  { "STEPS", 1, { 1, 5, 9 }, sendCommand},
+  { "VOLUME", 6, { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 63 }, sendCommand},
+  { "STEPS", 1, { 1, 5, 9, 10 }, sendCommand},
   { "AVC", 1, { 12, 48, 90 }, sendCommand},
   { "SOFTMUTE", 3, { 0, 1, 5, 8, 15, 20, 25, 32 }, sendCommand},
   { "AGC", 0, { 0, 1 }, sendCommand},
@@ -314,21 +313,29 @@ void reactToKeys() {
 }
 
 void seekStation(int dir) {
+  si4735.setFrequencyStep(1);
+  si4735.setSeekAmSpacing(5); // Default is 10 kHz spacing.
+  // si4735.setSeekFmRssiThreshold(20); // Default is 25
+  // si4735.setSeekAmSrnThreshold(5); // Default is 5
+  si4735.setMaxSeekTime(600000); // Default is 8
+
   if (dir == 1) {
-    display2("        >>>>");
-    // si4735.seekStation(1, 1);
-    // si4735.seekNextStation();
-    // si4735.seekStationProgress(convertFreqToDigits,1);
-    si4735.seekStationUp();
+    display2(">>>>  SEARCHING  >>>>");
+    si4735.seekStationProgress(seekDisplay, seekStop, 1);
   } else {
-    display2("        <<<<");
-    // si4735.seekStation(0, 1);
-    // si4735.seekPreviousStation();
-    // si4735.seekStationProgress(convertFreqToDigits,0);
-    si4735.seekStationDown();
+    display2("<<<<  SEARCHING  <<<<");
+    si4735.seekStationProgress(seekDisplay, seekStop, 0);
   }
-  int freq = si4735.getFrequency();
+}
+
+void seekDisplay(int freq) {
   convertFreqToDigits(freq);
+  display1(true);
+}
+
+bool seekStop()
+{
+  return (bool)(digitalRead(8) == LOW);
 }
 
 void detectKeys() {
@@ -398,7 +405,6 @@ void setup() {
   si4735.setAM(100, 30000, convertDigitsToFreq(), getSettingValueByName("STEPS"));
   si4735.setBandwidth(getSettingValueByName("BANDWIDTH"), getSettingValueByName("LINENOISE")); // BW 0=6kHz,  1=4kHz,  2=3kHz,  3=2kHz,  4=1kHz,  5=1.8kHz,  6=2.5kHz . The default bandwidth is 2 kHz. It works only in AM / SSB (LW/MW/SW) | Enables the AM Power Line Noise Rejection Filter.
   si4735.setSeekAmLimits(100, 30000);
-  si4735.setSeekAmSpacing(1); // Selects frequency spacingfor AM seek. Default is 10 kHz spacing.
   si4735.setAutomaticGainControl(getSettingValueByName("AGC"), getSettingValueByName("ATTENUATE")); // This param selects whether the AGC is enabled or disabled (0 = AGC enabled; 1 = AGC disabled) | AGC Index (0 = Minimum attenuation (max gain) 1 – 36 = Intermediate attenuation) if >greater than 36 - Maximum attenuation (min gain) )
   si4735.setTuneFrequencyAntennaCapacitor(1); // Related to VARACTOR. Official recommendation is 0, but PU2CLR has set to 1 for SW/MW and 0 for LW
   si4735.setTuneFrequencyAntennaCapacitor(getSettingValueByName("CAPACITOR")); // Related to VARACTOR. Official recommendation is 0, but PU2CLR has set to 1 for SW/MW and 0 for LW
