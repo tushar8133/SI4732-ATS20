@@ -42,7 +42,9 @@ void sendCommand(String name, int val) {
   if (name == "AGC")         si4735.setAutomaticGainControl(val, getSettingValueByName("ATTENUATE")); else
   if (name == "ATTENUATE")   si4735.setAutomaticGainControl(getSettingValueByName("AGC"), val); else
   if (name == "BANDWIDTH")   si4735.setBandwidth(val, getSettingValueByName("LINENOISE")); else
-  if (name == "LINENOISE")   si4735.setBandwidth(getSettingValueByName("BANDWIDTH"), val);
+  if (name == "LINENOISE")   si4735.setBandwidth(getSettingValueByName("BANDWIDTH"), val); else
+  if (name == "SIGNAL-TH")   si4735.setSeekAmRssiThreshold(val); else
+  if (name == "SNR-TH")      si4735.setSeekAmSNRThreshold(val);
 }
 
 typedef struct {
@@ -61,7 +63,9 @@ Settings settings[] = {
   { "ATTENUATE", 0, { 0, 1, 5, 10, 25, 36 }, sendCommand},
   { "BANDWIDTH", 2, { 0, 1, 2, 6, 3, 5, 4 }, sendCommand},
   { "CAPACITOR", 0, { 0, 1 }, sendCommand},
-  { "LINENOISE", 1, { 0, 1 }, sendCommand}
+  { "LINENOISE", 1, { 0, 1 }, sendCommand},
+  { "SIGNAL-TH", 1, { 0, 1, 2, 5, 8, 10, 12, 15, 18, 20, 30, 40, 50, 60, 70 }, sendCommand},
+  { "SNR-TH", 1, { 0, 1, 2, 3, 4, 5, 8, 10, 12, 15, 18, 20, 23, 25 }, sendCommand}
 };
 
 void setSettingIndexByName(String name, int val) {
