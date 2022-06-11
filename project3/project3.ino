@@ -343,6 +343,9 @@ void reactToKeys() {
 }
 
 void seekStation(int dir) {
+  int currFreq = si4735.getFrequency();
+  int shiftFreq = currFreq + dir;
+  si4735.setFrequency(shiftFreq);
   si4735.setFrequencyStep(1);
   si4735.setMaxSeekTime(600000); // Default is 8
 
@@ -355,17 +358,23 @@ void seekStation(int dir) {
     display2("   << SEARCHING <<   ");
     si4735.seekStationProgress(seekDisplay, seekStop, 0);
   }
-  seekAlignment();
+  seekAlignment(dir);
 }
 
-void seekAlignment() {
+void seekAlignment(int dir) {
   int freq = si4735.getFrequency();
   convertFreqToDigits(freq);
+  int unitAdj = 0;
   int lastDigit = FREQUENCY[4];
   if (lastDigit == 3 || lastDigit == 4 || lastDigit == 6 || lastDigit == 7) lastDigit = 5; else
-  if (lastDigit == 8 || lastDigit == 9 || lastDigit == 1 || lastDigit == 2) lastDigit = 0;
+  if (lastDigit == 1 || lastDigit == 2) lastDigit = 0; else
+  if (lastDigit == 8 || lastDigit == 9) {
+    lastDigit = 0;
+    unitAdj = 10;
+  }
   FREQUENCY[4] = lastDigit;
   int adjustedFreq = convertDigitsToFreq();
+  adjustedFreq = adjustedFreq + unitAdj;
   si4735.setFrequency(adjustedFreq);
 }
 
