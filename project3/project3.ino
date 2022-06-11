@@ -1,20 +1,24 @@
 /*
 TODO:
-show BATT
 Add reset into settings
 Auto apply optimal settings as per selected band
 AGC/ATT auto adjust rectify
 Save station to EEPROM
 Volume BAR
 Skip unused band while manual tuning
-auto fine adjust after seek
-again setFrequency after seek
-How to copy array to another array?
+Show settings text instead of numbers
+Better SNR bar
+Avoid unneccesary updates to oled
+Improve rotary senstivity
+show BATT
+-auto fine adjust after seek
+-again setFrequency after seek
 -show SNR
 -Fix digit selection highlight
 -Seek
 -helper method to set settings value
 -SIG and SNR addition in settings
+??How to copy array to another array
 */
 
 #include <SI4735.h>
