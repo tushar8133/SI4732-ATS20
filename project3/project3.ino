@@ -26,7 +26,7 @@ volatile int KNOB = 0;     // -1, 0, 1
 int KEY = 0;    // 1, 2, 3, 4
 int SCREEN = 0; // 0, 1, 2
 int CURRENT_SETTING = 0;
-int FREQUENCY[5] = {0, 7, 2, 0, 0};
+int FREQUENCY[5] = {0, 17, 8, 0, 0};
 bool INIT = true;
 long timer = millis();
 
@@ -44,7 +44,8 @@ void sendCommand(String name, int val) {
   if (name == "BANDWIDTH")   si4735.setBandwidth(val, getSettingValueByName("LINENOISE")); else
   if (name == "LINENOISE")   si4735.setBandwidth(getSettingValueByName("BANDWIDTH"), val); else
   if (name == "SIGNAL-TH")   si4735.setSeekAmRssiThreshold(val); else
-  if (name == "SNR-TH")      si4735.setSeekAmSNRThreshold(val);
+  if (name == "SNR-TH")      si4735.setSeekAmSNRThreshold(val); else
+  if (name == "SEEK-STEP")   si4735.setSeekAmSpacing(val);
 }
 
 typedef struct {
@@ -55,17 +56,18 @@ typedef struct {
 } Settings;
 
 Settings settings[] = {
-  { "VOLUME", 8, { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 63 }, sendCommand},
+  { "VOLUME", 10, { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 63 }, sendCommand},
   { "STEPS", 1, { 1, 5, 9, 10 }, sendCommand},
-  { "AVC", 1, { 12, 15, 18, 20, 25, 30, 35, 40, 50, 70, 90 }, sendCommand},
+  { "AVC", 8, { 12, 15, 18, 20, 25, 30, 35, 40, 50, 70, 90 }, sendCommand},
   { "SOFTMUTE", 3, { 0, 1, 5, 8, 15, 20, 25, 32 }, sendCommand},
   { "AGC", 0, { 0, 1 }, sendCommand},
   { "ATTENUATE", 0, { 0, 1, 5, 10, 25, 36 }, sendCommand},
   { "BANDWIDTH", 2, { 0, 1, 2, 6, 3, 5, 4 }, sendCommand},
   { "CAPACITOR", 0, { 0, 1 }, sendCommand},
   { "LINENOISE", 1, { 0, 1 }, sendCommand},
-  { "SIGNAL-TH", 1, { 0, 1, 2, 5, 8, 10, 12, 15, 18, 20, 30, 40, 50, 60, 70 }, sendCommand},
-  { "SNR-TH", 1, { 0, 1, 2, 3, 4, 5, 8, 10, 12, 15, 18, 20, 23, 25 }, sendCommand}
+  { "SIGNAL-TH", 12, { 0, 1, 2, 5, 8, 10, 12, 15, 18, 20, 30, 40, 50, 60, 70 }, sendCommand},
+  { "SNR-TH", 5, { 0, 1, 2, 3, 4, 5, 8, 10, 12, 15, 18, 20, 23, 25 }, sendCommand},
+  { "SEEK-STEP", 0, { 1, 5, 10 }, sendCommand}
 };
 
 void setSettingIndexByName(String name, int val) {
@@ -98,8 +100,10 @@ void setScreen(int dir) {
   int val = SCREEN + dir;
   if (val >= 0 && val <= 2) {
     SCREEN = val;
+  } else if (val < 0) {
+    si4735.setFrequencyStep(settings[1].items[settings[1].index]);
+    CURRENT_SETTING = 0;
   }
-  si4735.setFrequencyStep(settings[1].items[settings[1].index]);
 }
 
 void updateFrequency() {
@@ -336,18 +340,18 @@ void reactToKeys() {
 
 void seekStation(int dir) {
   si4735.setFrequencyStep(1);
-  si4735.setSeekAmSpacing(1); // Default is 10 kHz spacing.
-  si4735.setSeekAmRssiThreshold(50); // Default is 25
+  // si4735.setSeekAmSpacing(1); // Default is 10 kHz spacing.
+  // si4735.setSeekAmRssiThreshold(50); // Default is 25
   // si4735.setSeekAmSNRThreshold(1); // Default is 5
   si4735.setMaxSeekTime(600000); // Default is 8
 
   if (dir == 1) {
     display4("---------------------");
-    display2("      SEARCHING >>   ");
+    display2("   >> SEARCHING >>   ");
     si4735.seekStationProgress(seekDisplay, seekStop, 1);
   } else {
     display4("---------------------");
-    display2("   << SEARCHING      ");
+    display2("   << SEARCHING <<   ");
     si4735.seekStationProgress(seekDisplay, seekStop, 0);
   }
 }
@@ -434,6 +438,9 @@ void setup() {
   si4735.setTuneFrequencyAntennaCapacitor(getSettingValueByName("CAPACITOR")); // Related to VARACTOR. Official recommendation is 0, but PU2CLR has set to 1 for SW/MW and 0 for LW
   si4735.setAvcAmMaxGain(getSettingValueByName("AVC")); // Sets the maximum gain for automatic volume control on AM/SSB mode (between 12 and 90dB)
   si4735.setAmSoftMuteMaxAttenuation(getSettingValueByName("SOFTMUTE")); // This function can be useful to disable Soft Mute. The value 0 disable soft mute. Specified in units of dB. Default maximum attenuation is 8 dB. Goes til 32. It works for AM and SSB.
+  si4735.setSeekAmRssiThreshold(getSettingValueByName("SIGNAL-TH"));
+  si4735.setSeekAmSNRThreshold(getSettingValueByName("SNR-TH"));
+  si4735.setSeekAmSpacing(getSettingValueByName("SEEK-STEP"));
   si4735.setVolume(getSettingValueByName("VOLUME"));
 }
 
