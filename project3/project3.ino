@@ -57,7 +57,7 @@ typedef struct {
 Settings settings[] = {
   { "VOLUME", 8, { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 63 }, sendCommand},
   { "STEPS", 1, { 1, 5, 9, 10 }, sendCommand},
-  { "AVC", 1, { 12, 48, 90 }, sendCommand},
+  { "AVC", 1, { 12, 15, 18, 20, 25, 30, 35, 40, 50, 70, 90 }, sendCommand},
   { "SOFTMUTE", 3, { 0, 1, 5, 8, 15, 20, 25, 32 }, sendCommand},
   { "AGC", 0, { 0, 1 }, sendCommand},
   { "ATTENUATE", 0, { 0, 1, 5, 10, 25, 36 }, sendCommand},
