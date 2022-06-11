@@ -64,6 +64,18 @@ Settings settings[] = {
   { "LINENOISE", 1, { 0, 1 }, sendCommand}
 };
 
+void setSettingIndexByName(String name, int val) {
+  int totalSize = sizeof(settings) / sizeof(Settings);
+  int pos = 0;
+  for (int i = 0; i < totalSize; i++) {
+    if(settings[i].name == name) {
+      pos = i;
+      break;
+    }
+  }
+  settings[pos].index = val;
+}
+
 int getSettingValueByName(String name) {
   int totalSize = sizeof(settings) / sizeof(Settings);
   int pos = 0;
