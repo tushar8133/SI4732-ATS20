@@ -1,5 +1,6 @@
 /*
 TODO:
+make use of getSettingsValue methods
 Add reset into settings
 Auto apply optimal settings as per selected band
 AGC/ATT auto adjust rectify
@@ -30,7 +31,7 @@ volatile int KNOB = 0;     // -1, 0, 1
 int KEY = 0;    // 1, 2, 3, 4
 int SCREEN = 0; // 0, 1, 2
 int CURRENT_SETTING = 0;
-int FREQUENCY[5] = {0, 17, 8, 0, 0};
+int FREQUENCY[5] = {0, 0, 8, 1, 9};
 bool INIT = true;
 long timer = millis();
 
@@ -38,42 +39,42 @@ SI4735 si4735;
 Rotary encoder = Rotary(2, 3);
 
 void sendCommand(String name, int val) {
-  if (name == "SOFTMUTE")    si4735.setAmSoftMuteMaxAttenuation(val); else
-  if (name == "AVC")         si4735.setAvcAmMaxGain(val); else
-  if (name == "STEPS")       si4735.setFrequencyStep(val); else
-  if (name == "CAPACITOR")   si4735.setTuneFrequencyAntennaCapacitor(val); else
-  if (name == "VOLUME")      si4735.setVolume(val); else
-  if (name == "AGC")         si4735.setAutomaticGainControl(val, getSettingValueByName("ATTENUATE")); else
-  if (name == "ATTENUATE")   si4735.setAutomaticGainControl(getSettingValueByName("AGC"), val); else
-  if (name == "BANDWIDTH")   si4735.setBandwidth(val, getSettingValueByName("LINENOISE")); else
-  if (name == "LINENOISE")   si4735.setBandwidth(getSettingValueByName("BANDWIDTH"), val); else
-  if (name == "SIGNAL")      si4735.setSeekAmRssiThreshold(val); else
-  if (name == "SNR")         si4735.setSeekAmSNRThreshold(val); else
-  if (name == "SPACING")     si4735.setSeekAmSpacing(val); else
-  if (name == "ALIGNMENT")   {};
+  if (name == "SOFTMUTE")                 si4735.setAmSoftMuteMaxAttenuation(val); else
+  if (name == "AVC")                      si4735.setAvcAmMaxGain(val); else
+  if (name == "STEPS")                    si4735.setFrequencyStep(val); else
+  if (name == "CAPACITOR")                si4735.setTuneFrequencyAntennaCapacitor(val); else
+  if (name == "VOLUME")                   si4735.setVolume(val); else
+  if (name == "AGC")                      si4735.setAutomaticGainControl(val, getSettingValueByName("ATTENUATE")); else
+  if (name == "ATTENUATE")                si4735.setAutomaticGainControl(getSettingValueByName("AGC"), val); else
+  if (name == "BANDWIDTH")                si4735.setBandwidth(val, getSettingValueByName("LINENOISE")); else
+  if (name == "LINENOISE")                si4735.setBandwidth(getSettingValueByName("BANDWIDTH"), val); else
+  if (name == "SEEK SIGNAL THRESHOLD")    si4735.setSeekAmRssiThreshold(val); else
+  if (name == "SEEK SNR THRESHOLD")       si4735.setSeekAmSNRThreshold(val); else
+  if (name == "SEEK SPACING")             si4735.setSeekAmSpacing(val); else
+  if (name == "SEEK AUTO ALIGNMENT")      {};
 }
 
 typedef struct {
   String name;
+  void (*func)(String, int);
   int index;
   int items[20];
-  void (*func)(String, int);
 } Settings;
 
 Settings settings[] = {
-  { "VOLUME", 10, { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 63 }, sendCommand},
-  { "STEPS", 1, { 1, 5, 9, 10 }, sendCommand},
-  { "AVC", 8, { 12, 15, 18, 20, 25, 30, 35, 40, 50, 70, 90 }, sendCommand},
-  { "SOFTMUTE", 3, { 0, 1, 5, 8, 15, 20, 25, 32 }, sendCommand},
-  { "AGC", 0, { 0, 1 }, sendCommand},
-  { "ATTENUATE", 0, { 0, 1, 5, 10, 25, 36 }, sendCommand},
-  { "BANDWIDTH", 2, { 0, 1, 2, 6, 3, 5, 4 }, sendCommand},
-  { "CAPACITOR", 0, { 0, 1 }, sendCommand},
-  { "LINENOISE", 1, { 0, 1 }, sendCommand},
-  { "SIGNAL", 12, { 0, 1, 2, 5, 8, 10, 12, 15, 18, 20, 30, 40, 50, 60, 70 }, sendCommand},
-  { "SNR", 5, { 0, 1, 2, 3, 4, 5, 8, 10, 12, 15, 18, 20, 23, 25 }, sendCommand},
-  { "SPACING", 0, { 1, 5, 10 }, sendCommand},
-  { "ALIGNMENT", 1, { 0, 1 }, sendCommand}
+  { "VOLUME"                , sendCommand, 10, { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 63 }},
+  { "STEPS"                 , sendCommand, 1, { 1, 5, 9, 10 }},
+  { "AVC"                   , sendCommand, 8, { 12, 15, 18, 20, 25, 30, 35, 40, 50, 70, 90 }},
+  { "SOFTMUTE"              , sendCommand, 3, { 0, 1, 5, 8, 15, 20, 25, 32 }},
+  { "AGC"                   , sendCommand, 0, { 0, 1 }},
+  { "ATTENUATE"             , sendCommand, 0, { 0, 1, 5, 10, 25, 36 }},
+  { "BANDWIDTH"             , sendCommand, 2, { 0, 1, 2, 6, 3, 5, 4 }},
+  { "CAPACITOR"             , sendCommand, 0, { 0, 1 }},
+  { "LINENOISE"             , sendCommand, 1, { 0, 1 }},
+  { "SEEK SIGNAL THRESHOLD" , sendCommand, 12, { 0, 1, 2, 5, 8, 10, 12, 15, 18, 20, 30, 40, 50, 60, 70 }},
+  { "SEEK SNR THRESHOLD"    , sendCommand, 5, { 0, 1, 2, 3, 4, 5, 8, 10, 12, 15, 18, 20, 23, 25 }},
+  { "SEEK SPACING"          , sendCommand, 0, { 1, 5, 10 }},
+  { "SEEK AUTO ALIGNMENT"   , sendCommand, 1, { 0, 1 }}
 };
 
 void setSettingIndexByName(String name, int val) {
@@ -106,7 +107,8 @@ void setScreen(int dir) {
   int val = SCREEN + dir;
   if (val >= 0 && val <= 2) {
     SCREEN = val;
-  } else if (val == 0) {
+  }
+  if (val == 0) {
     CURRENT_SETTING = 0;
   }
 }
@@ -185,10 +187,12 @@ void updateDisplay() {
       display1(true);
       display2("");
     } else if (SCREEN == 1) {
-      display2("Settings >> " + name);
       display1(false);
+      display4("Settings");
+      display2(name);
     } else if (SCREEN == 2) {
-      display2(String(name) + " >> " + val);
+      display4(name);
+      display2(String(val));
     }
   } else if (INIT) {
     display1(true);
@@ -351,14 +355,14 @@ void seekStation(int dir) {
 
   if (dir == 1) {
     display4("---------------------");
-    display2("   >> SEARCHING >>   ");
+    display2("     SEARCHING >>    ");
     si4735.seekStationProgress(seekDisplay, seekStop, 1);
   } else {
     display4("---------------------");
-    display2("   << SEARCHING <<   ");
+    display2("   << SEARCHING      ");
     si4735.seekStationProgress(seekDisplay, seekStop, 0);
   }
-  if(getSettingValueByName("ALIGNMENT")) seekAlignment();
+  if(getSettingValueByName("SEEK AUTO ALIGNMENT")) seekAlignment();
 }
 
 void seekAlignment() {
@@ -386,7 +390,7 @@ void seekDisplay(int freq) {
 
 bool seekStop()
 {
-  return (bool)(digitalRead(5) == LOW || digitalRead(4) == LOW);
+  return (bool)((digitalRead(5) == LOW) || (digitalRead(4) == LOW) || KNOB != 0);
 }
 
 void detectInteraction() {
@@ -461,9 +465,9 @@ void setup() {
   si4735.setTuneFrequencyAntennaCapacitor(getSettingValueByName("CAPACITOR")); // Related to VARACTOR. Official recommendation is 0, but PU2CLR has set to 1 for SW/MW and 0 for LW
   si4735.setAvcAmMaxGain(getSettingValueByName("AVC")); // Sets the maximum gain for automatic volume control on AM/SSB mode (between 12 and 90dB)
   si4735.setAmSoftMuteMaxAttenuation(getSettingValueByName("SOFTMUTE")); // This function can be useful to disable Soft Mute. The value 0 disable soft mute. Specified in units of dB. Default maximum attenuation is 8 dB. Goes til 32. It works for AM and SSB.
-  si4735.setSeekAmRssiThreshold(getSettingValueByName("SIGNAL")); // Default is 10 kHz spacing.
-  si4735.setSeekAmSNRThreshold(getSettingValueByName("SNR")); // Default is 25
-  si4735.setSeekAmSpacing(getSettingValueByName("SPACING")); // Default is 5
+  si4735.setSeekAmRssiThreshold(getSettingValueByName("SEEK SIGNAL THRESHOLD")); // Default is 10 kHz spacing.
+  si4735.setSeekAmSNRThreshold(getSettingValueByName("SEEK SNR THRESHOLD")); // Default is 25
+  si4735.setSeekAmSpacing(getSettingValueByName("SEEK SPACING")); // Default is 5
   si4735.setVolume(getSettingValueByName("VOLUME"));
 }
 
