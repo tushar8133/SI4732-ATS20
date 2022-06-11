@@ -2,19 +2,19 @@
 TODO:
 show SNR
 show BATT
-Fix digit selection highlight
 Add reset into settings
 Auto apply optimal settings as per selected band
 AGC/ATT auto adjust rectify
 Save station to EEPROM
 Volume BAR
-Seek
 Skip unused band while manual tuning
-helper method to set settings value
 auto fine adjust after seek
 again setFrequency after seek
-SIG and SNR addition in settings
 How to copy array to another array?
+-Fix digit selection highlight
+-Seek
+-helper method to set settings value
+-SIG and SNR addition in settings
 */
 
 #include <SI4735.h>
