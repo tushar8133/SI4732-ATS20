@@ -1,6 +1,5 @@
 /*
 TODO:
-show SNR
 show BATT
 Add reset into settings
 Auto apply optimal settings as per selected band
@@ -11,6 +10,7 @@ Skip unused band while manual tuning
 auto fine adjust after seek
 again setFrequency after seek
 How to copy array to another array?
+-show SNR
 -Fix digit selection highlight
 -Seek
 -helper method to set settings value
@@ -340,9 +340,6 @@ void reactToKeys() {
 
 void seekStation(int dir) {
   si4735.setFrequencyStep(1);
-  // si4735.setSeekAmSpacing(1); // Default is 10 kHz spacing.
-  // si4735.setSeekAmRssiThreshold(50); // Default is 25
-  // si4735.setSeekAmSNRThreshold(1); // Default is 5
   si4735.setMaxSeekTime(600000); // Default is 8
 
   if (dir == 1) {
@@ -354,6 +351,18 @@ void seekStation(int dir) {
     display2("   << SEARCHING <<   ");
     si4735.seekStationProgress(seekDisplay, seekStop, 0);
   }
+  seekAlignment();
+}
+
+void seekAlignment() {
+  int freq = si4735.getFrequency();
+  convertFreqToDigits(freq);
+  int lastDigit = FREQUENCY[4];
+  if (lastDigit == 3 || lastDigit == 4 || lastDigit == 6 || lastDigit == 7) lastDigit = 5; else
+  if (lastDigit == 8 || lastDigit == 9 || lastDigit == 1 || lastDigit == 2) lastDigit = 0;
+  FREQUENCY[4] = lastDigit;
+  int adjustedFreq = convertDigitsToFreq();
+  si4735.setFrequency(adjustedFreq);
 }
 
 void seekDisplay(int freq) {
@@ -366,7 +375,7 @@ bool seekStop()
   return (bool)(digitalRead(8) == LOW);
 }
 
-void detectKeys() {
+void detectInteraction() {
   if (digitalRead(4) == LOW) KEY = 4; else
   if (digitalRead(5) == LOW) KEY = 5; else
   if (digitalRead(6) == LOW) KEY = 6; else
@@ -413,10 +422,10 @@ void frequencyJumper(int dir) {
 }
 
 void convertFreqToDigits(int freq) {
-  FREQUENCY[4] = freq%10;
-  FREQUENCY[3] = (freq/10)%10;
-  FREQUENCY[2] = (freq/100)%10;
   FREQUENCY[1] = freq/1000;
+  FREQUENCY[2] = (freq/100)%10;
+  FREQUENCY[3] = (freq/10)%10;
+  FREQUENCY[4] = freq%10;
 }
 
 int convertDigitsToFreq() {
@@ -438,14 +447,14 @@ void setup() {
   si4735.setTuneFrequencyAntennaCapacitor(getSettingValueByName("CAPACITOR")); // Related to VARACTOR. Official recommendation is 0, but PU2CLR has set to 1 for SW/MW and 0 for LW
   si4735.setAvcAmMaxGain(getSettingValueByName("AVC")); // Sets the maximum gain for automatic volume control on AM/SSB mode (between 12 and 90dB)
   si4735.setAmSoftMuteMaxAttenuation(getSettingValueByName("SOFTMUTE")); // This function can be useful to disable Soft Mute. The value 0 disable soft mute. Specified in units of dB. Default maximum attenuation is 8 dB. Goes til 32. It works for AM and SSB.
-  si4735.setSeekAmRssiThreshold(getSettingValueByName("SIGNAL-TH"));
-  si4735.setSeekAmSNRThreshold(getSettingValueByName("SNR-TH"));
-  si4735.setSeekAmSpacing(getSettingValueByName("SEEK-STEP"));
+  si4735.setSeekAmRssiThreshold(getSettingValueByName("SIGNAL-TH")); // Default is 10 kHz spacing.
+  si4735.setSeekAmSNRThreshold(getSettingValueByName("SNR-TH")); // Default is 25
+  si4735.setSeekAmSpacing(getSettingValueByName("SEEK-STEP")); // Default is 5
   si4735.setVolume(getSettingValueByName("VOLUME"));
 }
 
 void loop() {
-  detectKeys();
+  detectInteraction();
   reactToKeys();
   reactToKnob();
   updateDisplay();
