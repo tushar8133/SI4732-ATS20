@@ -47,9 +47,10 @@ void sendCommand(String name, int val) {
   if (name == "ATTENUATE")   si4735.setAutomaticGainControl(getSettingValueByName("AGC"), val); else
   if (name == "BANDWIDTH")   si4735.setBandwidth(val, getSettingValueByName("LINENOISE")); else
   if (name == "LINENOISE")   si4735.setBandwidth(getSettingValueByName("BANDWIDTH"), val); else
-  if (name == "SIGNAL-TH")   si4735.setSeekAmRssiThreshold(val); else
-  if (name == "SNR-TH")      si4735.setSeekAmSNRThreshold(val); else
-  if (name == "SEEK-STEP")   si4735.setSeekAmSpacing(val);
+  if (name == "SIGNAL")      si4735.setSeekAmRssiThreshold(val); else
+  if (name == "SNR")         si4735.setSeekAmSNRThreshold(val); else
+  if (name == "SPACING")     si4735.setSeekAmSpacing(val); else
+  if (name == "ALIGNMENT")   {};
 }
 
 typedef struct {
@@ -69,9 +70,10 @@ Settings settings[] = {
   { "BANDWIDTH", 2, { 0, 1, 2, 6, 3, 5, 4 }, sendCommand},
   { "CAPACITOR", 0, { 0, 1 }, sendCommand},
   { "LINENOISE", 1, { 0, 1 }, sendCommand},
-  { "SIGNAL-TH", 12, { 0, 1, 2, 5, 8, 10, 12, 15, 18, 20, 30, 40, 50, 60, 70 }, sendCommand},
-  { "SNR-TH", 5, { 0, 1, 2, 3, 4, 5, 8, 10, 12, 15, 18, 20, 23, 25 }, sendCommand},
-  { "SEEK-STEP", 0, { 1, 5, 10 }, sendCommand}
+  { "SIGNAL", 12, { 0, 1, 2, 5, 8, 10, 12, 15, 18, 20, 30, 40, 50, 60, 70 }, sendCommand},
+  { "SNR", 5, { 0, 1, 2, 3, 4, 5, 8, 10, 12, 15, 18, 20, 23, 25 }, sendCommand},
+  { "SPACING", 0, { 1, 5, 10 }, sendCommand},
+  { "ALIGNMENT", 1, { 0, 1 }, sendCommand}
 };
 
 void setSettingIndexByName(String name, int val) {
@@ -104,8 +106,7 @@ void setScreen(int dir) {
   int val = SCREEN + dir;
   if (val >= 0 && val <= 2) {
     SCREEN = val;
-  } else if (val < 0) {
-    si4735.setFrequencyStep(settings[1].items[settings[1].index]);
+  } else if (val == 0) {
     CURRENT_SETTING = 0;
   }
 }
@@ -249,7 +250,7 @@ String getPadding(int val, int padLength) {
 bool timeLimit() {
   long currTime = millis();
   if( currTime > timer) {
-    timer = millis() + 300;
+    timer = millis() + 500;
     return true;
   } else {
     return false;
@@ -346,7 +347,6 @@ void seekStation(int dir) {
   int currFreq = si4735.getFrequency();
   int shiftFreq = currFreq + dir;
   si4735.setFrequency(shiftFreq);
-  si4735.setFrequencyStep(1);
   si4735.setMaxSeekTime(600000); // Default is 8
 
   if (dir == 1) {
@@ -358,10 +358,10 @@ void seekStation(int dir) {
     display2("   << SEARCHING <<   ");
     si4735.seekStationProgress(seekDisplay, seekStop, 0);
   }
-  seekAlignment(dir);
+  if(getSettingValueByName("ALIGNMENT")) seekAlignment();
 }
 
-void seekAlignment(int dir) {
+void seekAlignment() {
   int freq = si4735.getFrequency();
   convertFreqToDigits(freq);
   int unitAdj = 0;
@@ -376,6 +376,7 @@ void seekAlignment(int dir) {
   int adjustedFreq = convertDigitsToFreq();
   adjustedFreq = adjustedFreq + unitAdj;
   si4735.setFrequency(adjustedFreq);
+  convertFreqToDigits(adjustedFreq);
 }
 
 void seekDisplay(int freq) {
@@ -385,7 +386,7 @@ void seekDisplay(int freq) {
 
 bool seekStop()
 {
-  return (bool)(digitalRead(8) == LOW);
+  return (bool)(digitalRead(5) == LOW || digitalRead(4) == LOW);
 }
 
 void detectInteraction() {
@@ -460,9 +461,9 @@ void setup() {
   si4735.setTuneFrequencyAntennaCapacitor(getSettingValueByName("CAPACITOR")); // Related to VARACTOR. Official recommendation is 0, but PU2CLR has set to 1 for SW/MW and 0 for LW
   si4735.setAvcAmMaxGain(getSettingValueByName("AVC")); // Sets the maximum gain for automatic volume control on AM/SSB mode (between 12 and 90dB)
   si4735.setAmSoftMuteMaxAttenuation(getSettingValueByName("SOFTMUTE")); // This function can be useful to disable Soft Mute. The value 0 disable soft mute. Specified in units of dB. Default maximum attenuation is 8 dB. Goes til 32. It works for AM and SSB.
-  si4735.setSeekAmRssiThreshold(getSettingValueByName("SIGNAL-TH")); // Default is 10 kHz spacing.
-  si4735.setSeekAmSNRThreshold(getSettingValueByName("SNR-TH")); // Default is 25
-  si4735.setSeekAmSpacing(getSettingValueByName("SEEK-STEP")); // Default is 5
+  si4735.setSeekAmRssiThreshold(getSettingValueByName("SIGNAL")); // Default is 10 kHz spacing.
+  si4735.setSeekAmSNRThreshold(getSettingValueByName("SNR")); // Default is 25
+  si4735.setSeekAmSpacing(getSettingValueByName("SPACING")); // Default is 5
   si4735.setVolume(getSettingValueByName("VOLUME"));
 }
 
