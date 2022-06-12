@@ -32,7 +32,7 @@ volatile int KNOB = 0;     // -1, 0, 1
 int KEY = 0;    // 1, 2, 3, 4
 int SCREEN = 0; // 0, 1, 2
 int CURRENT_SETTING = 0;
-int FREQUENCY[5] = {0, 9, 6, 1, 0};
+int FREQUENCY[5] = {0, 9, 6, 2, 0};
 bool INIT = true;
 long timer = millis();
 int BOXSIZE = 8;
@@ -369,13 +369,13 @@ void displayLine8(String str) {
 
 void displaySettingsList() {
   int bp = BOXPOS - 1;
-  oled.clear();
   oled.setFont(FONT6X8);
   for( int i = 0; i < BOXSIZE; i++) {
     String name = settings[bp + i].name;
     oled.setCursor(0, i);
     oled.print(settingsGetCursorPos(i));
     oled.print(name);
+    oled.clearToEOL();
     oled.setCursor(113, i);
     oled.print(settingsGetValueByName(name));
   }
