@@ -25,7 +25,7 @@ show BATT
 #include <SI4735.h>
 #include <TinyI2CMaster.h>
 #include <Tiny4kOLED.h>
-#include <font8x16atari.h>
+#include "font16x32digits.h"
 #include <Rotary.h>
 
 volatile int KNOB = 0;     // -1, 0, 1
@@ -183,12 +183,12 @@ void seekStation(int dir) {
   si4735.setMaxSeekTime(600000); // Default is 8
 
   if (dir == 1) {
-    displayLine3("---------------------");
-    displayLine4("     SEARCHING >>    ");
+    displayLine7("---------------------");
+    displayLine8("       SEARCH >>     ");
     si4735.seekStationProgress(seekDisplay, seekStop, 1);
   } else {
-    displayLine3("---------------------");
-    displayLine4("   << SEARCHING      ");
+    displayLine7("---------------------");
+    displayLine8("    << SEARCH        ");
     si4735.seekStationProgress(seekDisplay, seekStop, 0);
   }
   if(settingsGetValueByName("AUTO ALIGNMENT")) seekAlignment();
@@ -313,25 +313,25 @@ void displayWelcome() {
   oled.begin(128, 64, sizeof(tiny4koled_init_128x64r), tiny4koled_init_128x64r);
   oled.clear();
   oled.on();
-  oled.setFont(FONT8X16ATARI);
+  oled.setFont(FONT16X32DIGITS);
   oled.setCursor(0, 0);
-  oled.print("LOADING...");
+  oled.print("");
 }
 
 void displayLine1(bool show) {
-  int margin = 45;
-  int inc = 8;
+  int margin = 25;
+  int inc = 20;
   int cursorPos = FREQUENCY[0];
-  oled.setFont(FONT8X16ATARI);
+  oled.setFont(FONT16X32DIGITS);
   oled.setCursor(0, 0);
-  oled.print("                ");
+  oled.clearToEOL();
   if (show) {
     for (int i = 1; i <= 4; ++i)
     {
       if (cursorPos == i) oled.invertOutput(true);
       int cf = FREQUENCY[i];
       if (cf > 9) {
-        oled.setCursor( margin, 0);
+        oled.setCursor( 4 + margin, 0);
       } else {
         oled.setCursor( margin + (inc * i), 0);
       }
@@ -341,25 +341,36 @@ void displayLine1(bool show) {
   }
 }
 
-void displayLine3(String str) {
+void displayLine5() {
+  oled.setCursor(0, 4);
+  oled.clearToEOL();
+}
+
+void displayLine6() {
+  oled.setCursor(0, 5);
+  oled.clearToEOL();
+}
+
+void displayLine7(String str) {
   oled.setFont(FONT6X8);
-  oled.setCursor(0, 2);
-  oled.print("                     ");
-  oled.setCursor(0, 2);
+  oled.setCursor(0, 6);
+  oled.clearToEOL();
+  oled.setCursor(0, 6);
   oled.print(str);
 }
 
-void displayLine4(String str) {
+void displayLine8(String str) {
   oled.setFont(FONT6X8);
-  oled.setCursor(0, 3);
-  oled.print("                     ");
-  oled.setCursor(0, 3);
+  oled.setCursor(0, 7);
+  oled.clearToEOL();
+  oled.setCursor(0, 7);
   oled.print(str);
 }
 
 void displaySettingsList() {
   int bp = BOXPOS - 1;
   oled.clear();
+  oled.setFont(FONT6X8);
   for( int i = 0; i < BOXSIZE; i++) {
     String name = settings[bp + i].name;
     oled.setCursor(0, i);
@@ -371,6 +382,7 @@ void displaySettingsList() {
 }
 
 void displaySettingsItem() {
+  oled.setFont(FONT6X8);
   String name = settings[CURRENT_SETTING].name;
   oled.setCursor(113, CURPOS - 1);
   oled.print("  ");
@@ -392,6 +404,8 @@ void setScreen(int dir) {
     CURRENT_SETTING = 0;
     CURPOS = 1;
     BOXPOS = 1;
+    displayLine5();
+    displayLine6();
   }
 }
 
@@ -417,7 +431,7 @@ void displayLoop() {
   if (KEY != 0 || KNOB != 0) {
     if (SCREEN == 0) {
       displayLine1(true);
-      displayLine4("");
+      displayLine8("");
     } else if (SCREEN == 1) {
       displaySettingsList();
     } else if (SCREEN == 2) {
@@ -436,8 +450,8 @@ void displayLoop() {
     String snrBars = getBars(snr, 26, 13);
     String sigPad = getPadding(sig, 2);
     String snrPad = getPadding(snr, 2);
-    displayLine3("SIG "+sigPad+" "+sigBars);
-    displayLine4("SNR "+snrPad+" "+snrBars);
+    displayLine7("SIG "+sigPad+" "+sigBars);
+    displayLine8("SNR "+snrPad+" "+snrBars);
   }
 
 }
