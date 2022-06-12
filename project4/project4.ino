@@ -23,6 +23,7 @@ show BATT
 */
 
 #include <SI4735.h>
+#include <TinyI2CMaster.h>
 #include <Tiny4kOLED.h>
 #include <font8x16atari.h>
 #include <Rotary.h>
@@ -31,10 +32,10 @@ volatile int KNOB = 0;     // -1, 0, 1
 int KEY = 0;    // 1, 2, 3, 4
 int SCREEN = 0; // 0, 1, 2
 int CURRENT_SETTING = 0;
-int FREQUENCY[5] = {0, 6, 0, 2, 5};
+int FREQUENCY[5] = {0, 9, 6, 1, 0};
 bool INIT = true;
 long timer = millis();
-int BOXSIZE = 4;
+int BOXSIZE = 8;
 int CURPOS = 1;
 int BOXPOS = 1;
 
@@ -68,7 +69,7 @@ typedef struct {
 } Settings;
 
 Settings settings[] = {
-  { "VOLUME"            , sendCommand, 5, { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 63 }},
+  { "VOLUME"            , sendCommand, 7, { 0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 63 }},
   { "STEPS"             , sendCommand, 1, { 1, 5, 9, 10 }},
   { "AVC"               , sendCommand, 8, { 12, 15, 18, 20, 25, 30, 35, 40, 50, 70, 90 }},
   { "SOFTMUTE"          , sendCommand, 3, { 0, 1, 5, 8, 15, 20, 25, 32 }},
@@ -148,9 +149,9 @@ void settingsItemUpdate() {
 
 void settingsScrollDown() {
   int settingsSize = sizeof(settings) / sizeof(Settings);
-  if (CURPOS < 4) {
+  if (CURPOS < BOXSIZE) {
     CURPOS++;
-  } else if(CURPOS == 4 && (BOXPOS + BOXSIZE) <= settingsSize) {
+  } else if(CURPOS == BOXSIZE && (BOXPOS + BOXSIZE) <= settingsSize) {
     BOXPOS++;
   }
 }
@@ -309,7 +310,7 @@ String getPadding(int val, int padLength) {
 /* =================== DISPLAY =================== */
 
 void displayWelcome() {
-  oled.begin();
+  oled.begin(128, 64, sizeof(tiny4koled_init_128x64r), tiny4koled_init_128x64r);
   oled.clear();
   oled.on();
   oled.setFont(FONT8X16ATARI);
