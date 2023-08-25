@@ -1,0 +1,2 @@
+- Radio Model ATS-20 (Based on IC __SI4732__)
+- External Active Antenna (MLA-30+)
